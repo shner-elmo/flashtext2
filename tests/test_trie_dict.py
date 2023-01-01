@@ -35,38 +35,38 @@ class TestTrieDict(unittest.TestCase):
         ]
         self.td = TrieDict()
         for w in self.words:
-            self.td.add_word(w)
+            self.td.add_keyword(w)
 
     def test_add_word(self):
         td = TrieDict()
-        assert td.get_words() == []
+        assert td.get_keywords() == []
 
         for w in self.words:
-            td.add_word(w)
-        assert sorted(td.get_words()) == sorted(self.words)
+            td.add_keyword(w)
+        assert sorted(td.get_keywords()) == sorted(self.words)
 
         # add same words twice
         for w in self.words:
-            td.add_word(w)
-        assert sorted(td.get_words()) == sorted(self.words)
+            td.add_keyword(w)
+        assert sorted(td.get_keywords()) == sorted(self.words)
         assert len(td) == len(self.words)
 
     def test_remove_word(self):
         n = len(self.td)
         for w in self.words:
             assert w in self.td
-            self.td.remove_word(w)
+            self.td.remove_keyword(w)
             assert w not in self.td
 
             self.assertRaises(
                 WordNotFoundError,
-                self.td.remove_word, w
+                self.td.remove_keyword, w
             )
             n -= 1
         assert n == len(self.td)
         self.assertRaises(
             WordNotFoundError,
-            self.td.remove_word, 'non-existent-word'
+            self.td.remove_keyword, 'non-existent-word'
         )
 
     def test_node_iterator(self):
@@ -83,12 +83,12 @@ class TestTrieDict(unittest.TestCase):
         self.test_contains_()
 
     def test_get_words(self):
-        out = self.td.get_words()
+        out = self.td.get_keywords()
         assert isinstance(out, list)
         assert isinstance(out[0], str)
         assert len(out) == len(self.td)
 
-        assert len(self.td.get_words(5)) == 5
+        assert len(self.td.get_keywords(5)) == 5
 
     def test_reset_dict(self):
         self.td.reset_dict()
@@ -101,7 +101,7 @@ class TestTrieDict(unittest.TestCase):
             assert w in self.td
             assert w in iter(self.td)
 
-            self.td.remove_word(w)
+            self.td.remove_keyword(w)
 
             assert not self.td.has_word(w)
             assert w not in self.td
@@ -120,12 +120,12 @@ class TestTrieDict(unittest.TestCase):
 
         n = len(self.td)
         for w in self.words[:3]:
-            self.td.remove_word(w)
+            self.td.remove_keyword(w)
             n -= 1
         assert n == len(self.td)
 
-        self.td.add_word('abc')
-        self.td.add_word('abcdef')
+        self.td.add_keyword('abc')
+        self.td.add_keyword('abcdef')
         assert n + 2 == len(self.td)
 
     def test_eq_(self):
@@ -136,7 +136,7 @@ class TestTrieDict(unittest.TestCase):
         assert self.td != td2
 
         for w in self.words:
-            td2.add_word(w)
+            td2.add_keyword(w)
         assert self.td == td2
 
     def test_str_(self):

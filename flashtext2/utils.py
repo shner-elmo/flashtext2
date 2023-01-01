@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Callable
 __all__ = ['normalize_parameter']
 
 if TYPE_CHECKING:
-    from .keyword_processor import KeywordProcessor
+    from .keyword_processor import TrieDict
 
 
 def normalize_parameter(*params: str) -> Callable:
@@ -22,10 +22,12 @@ def normalize_parameter(*params: str) -> Callable:
         def wrapper(*args, **kwargs):
 
             kwargs.update(dict(zip(func.__code__.co_varnames, args)))  # convert all args to kwargs
-            self: KeywordProcessor = kwargs['self']
+            self: TrieDict = kwargs['self']
             if not self._case_sensitive:
                 for p in params:
-                    kwargs[p] = kwargs[p].lower()
+                    value = kwargs.get(p)
+                    if value is not None:
+                        kwargs[p] = value.lower()
 
             return func(**kwargs)
         return wrapper

@@ -37,10 +37,11 @@ def recursive_get_dict_items(dct: dict) -> Generator[tuple[str, Any], None, None
 
 
 class TrieDict:
-    __slots__ = ('trie_dict', '_words_count')
+    __slots__ = ('_case_sensitive', 'trie_dict', '_words_count')
     keyword = '__keyword__'
 
-    def __init__(self) -> None:
+    def __init__(self, case_sensitive: bool = False) -> None:
+        self._case_sensitive = case_sensitive  # shouldn't be changed after __init__()
         self._words_count = 0
         self.trie_dict = {}
 
