@@ -1,3 +1,4 @@
+[project]
 name = "flashtext2"
 version = "0.1.0"
 description = "FlashText 2.0"
