@@ -5,20 +5,7 @@ from collections import deque
 from typing import Generator, Any
 
 from .utils import normalize_parameter
-
-
-class TrieDictException(Exception):
-    """
-    Base TrieDict Exception
-    """
-    pass
-
-
-class WordNotFoundError(TrieDictException):
-    """
-    Raised when given word isn't present in the tree data structure
-    """
-    pass
+from .exceptions import WordNotFoundError
 
 
 def recursive_get_dict_items(dct: dict) -> Generator[tuple[str, Any], None, None]:

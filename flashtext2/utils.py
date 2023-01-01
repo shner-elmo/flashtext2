@@ -1,11 +1,14 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable
+import functools
+import inspect
 
-__all__ = ['normalize_parameter']
+from typing import TYPE_CHECKING, Callable
 
 if TYPE_CHECKING:
     from .keyword_processor import TrieDict
+
+__all__ = ['normalize_parameter']
 
 
 def normalize_parameter(*params: str) -> Callable:
@@ -19,14 +22,16 @@ def normalize_parameter(*params: str) -> Callable:
     :param params: parameter names
     """
     def decorator(func):
+        @functools.wraps(func)
         def wrapper(*args, **kwargs):
 
-            kwargs.update(dict(zip(func.__code__.co_varnames, args)))  # convert all args to kwargs
+            kwargs = inspect.getcallargs(func, *args, **kwargs)  # convert all args and def parameters to dict/kwargs
             self: TrieDict = kwargs['self']
+
             if not self._case_sensitive:
                 for p in params:
                     value = kwargs.get(p)
-                    if value is not None:
+                    if value:
                         kwargs[p] = value.lower()
 
             return func(**kwargs)
