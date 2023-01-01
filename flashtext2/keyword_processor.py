@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import overload, Literal
+from typing import Union, Literal, overload
 
 from .trie_dict import TrieDict
 from .utils import normalize_parameter
@@ -17,7 +17,7 @@ class KeywordProcessor(TrieDict):
         ...
 
     @normalize_parameter('sentence')
-    def extract_keywords(self, sentence: str, span_info: bool = False) -> list[str] | list[tuple[str, int, int]]:
+    def extract_keywords(self, sentence: str, span_info: bool = False) -> Union[list[str], list[tuple[str, int, int]]]:
         output = []
         trie_dict = self.trie_dict
 

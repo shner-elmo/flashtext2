@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import itertools
 from collections import deque
-from typing import Generator, Any
+from typing import Union, Generator, Any
 
 from .utils import normalize_parameter
 from .exceptions import WordNotFoundError
@@ -33,7 +33,7 @@ class TrieDict:
         self.trie_dict = {}
 
     @normalize_parameter('word', 'clean_word')
-    def add_keyword(self, word: str, clean_word: str | None = None) -> None:
+    def add_keyword(self, word: str, clean_word: Union[str, None] = None) -> None:
         if word in self:
             return  # to avoid increasing the counter
         node = self.trie_dict
@@ -84,7 +84,7 @@ class TrieDict:
     def has_word(self, word: str) -> bool:
         return word in self
 
-    def get_keywords(self, n: int | None = None) -> list[str]:
+    def get_keywords(self, n: Union[int, None] = None) -> list[str]:
         """
         Get n amount of words from the Trie Dict
         """
