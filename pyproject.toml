@@ -1,0 +1,9 @@
+name = "flashtext2"
+version = "0.1.0"
+description = "FlashText 2.0"
+authors = ["Shneor Elmaleh <770elmo@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+
+repository = "https://github.com/shner-elmo/FlashText2.0"
+documentation = "https://github.com/shner-elmo/FlashText2.0/blob/master/README.md"
