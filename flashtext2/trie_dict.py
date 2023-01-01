@@ -4,6 +4,8 @@ import itertools
 from collections import deque
 from typing import Generator, Any
 
+from .utils import normalize_parameter
+
 
 class TrieDictException(Exception):
     """
@@ -42,17 +44,19 @@ class TrieDict:
         self._words_count = 0
         self.trie_dict = {}
 
-    def add_word(self, word: str) -> None:
+    @normalize_parameter('word', 'clean_word')
+    def add_keyword(self, word: str, clean_word: str | None = None) -> None:
         if word in self:
             return  # to avoid increasing the counter
         node = self.trie_dict
         for char in word:
             node = node.setdefault(char, {})
 
-        node[TrieDict.keyword] = word
+        node[TrieDict.keyword] = clean_word or word
         self._words_count += 1
 
-    def remove_word(self, word: str) -> None:
+    @normalize_parameter('word')
+    def remove_keyword(self, word: str) -> None:
         if word not in self:
             raise WordNotFoundError(f"No such word: '{word}'")
 
@@ -74,6 +78,7 @@ class TrieDict:
                 del last_node[first_char_to_remove]
         self._words_count -= 1
 
+    @normalize_parameter('word')
     def node_iterator(self, word: str) -> Generator[dict, None, None]:
         """
         Yield each node (dictionary) for each character in the word
@@ -87,10 +92,11 @@ class TrieDict:
                     f'Not able to locate "{word}" in the Trie Dict. (failed at character "{word[idx]}")')
             yield node
 
+    @normalize_parameter('word')
     def has_word(self, word: str) -> bool:
         return word in self
 
-    def get_words(self, n: int | None = None) -> list[str]:
+    def get_keywords(self, n: int | None = None) -> list[str]:
         """
         Get n amount of words from the Trie Dict
         """
@@ -99,6 +105,7 @@ class TrieDict:
     def reset_dict(self) -> None:
         self.__init__()
 
+    @normalize_parameter('word')
     def __contains__(self, word: str) -> bool:
         """
         Check if each character from the given word is present in the Trie Dict,
@@ -132,7 +139,7 @@ class TrieDict:
         """
         Get first 30 words
         """
-        return str(self.get_words(30))
+        return str(self.get_keywords(30))
 
     def __repr__(self) -> str:
         """
