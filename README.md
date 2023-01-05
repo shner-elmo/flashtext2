@@ -81,7 +81,7 @@ and it turns out that for extracting keywords it is a bit slower than original p
 
 ![Image](benchmarks/extract-keywords.png)
 
-But for replacing keywords, it is much faster!
+But for replacing keywords, it is much faster! 
 
 ![Image](benchmarks/replace-keywords.png)
 
