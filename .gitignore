@@ -1,3 +1,6 @@
 __pycache__/
 .idea/
 .vscode/
+debug_env.py
+test.txt
+notes.txt
