@@ -38,7 +38,7 @@ def test() -> list[tuple]:
         assert isinstance(out1, str)
         assert isinstance(out2, str)
         assert len(out1) == len(out2), ('Length:', len(out1), len(out2))
-        assert out1 == out2  # TODO use sorted()?
+        assert out1 == out2
 
         # you can uncomment this if you want copy and paste the output in gsheets or excel
         # pretty_print(i, time1, time2)
@@ -69,7 +69,7 @@ def main():
         'flashtext 2.0': time2,
     })
     plt = df.plot.line(title='Time For Replacing Keywords', x='count', xlabel='Word Count',
-                       ylabel='Seconds', y=['flashtext', 'flashtext 2.0'])
+                       ylabel='Seconds', y=['flashtext', 'flashtext 2.0'], grid=True)
     plt.figure.savefig('replace-keywords.png')
 
 
