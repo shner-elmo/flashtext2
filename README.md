@@ -78,9 +78,11 @@ Simplicity is great, but how is the performance?
 
 I created some benchmarks which you could find [here](https://github.com/shner-elmo/FlashText2.0/tree/master/benchmarks), 
 and it turns out that for extracting keywords it is a bit slower than original package:
+
 ![Image](benchmarks/extract-keywords.png)
 
 But for replacing keywords, it is much faster!
+
 ![Image](benchmarks/replace-keywords.png)
 
 
