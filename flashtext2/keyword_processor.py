@@ -8,6 +8,13 @@ from .trie_dict import TrieDict
 
 class KeywordProcessor(TrieDict):
     def __init__(self, case_sensitive: bool = False) -> None:
+        """
+        Initialize the Keyword Processor
+
+        If case_sensitive is False, it will convert all the strings to lowercase.
+
+        :param case_sensitive: bool, default False
+        """
         self.non_word_boundaries: set[str] = set(string.digits + string.ascii_letters + '_')
         super().__init__(case_sensitive)
 
@@ -24,7 +31,18 @@ class KeywordProcessor(TrieDict):
         Extract all the keywords from the given sentence
 
         If span_info is True it will return a list of tuples containing: (keyword, start_idx, end_idx),
-        otherwise it will return a list of keywords
+        otherwise it will return a list of keywords.
+
+        Examples:
+
+        >>> from flashtext2 import KeywordProcessor
+        >>> kp = KeywordProcessor()
+        >>> kp.add_keywords_from_dict({'py': 'Python', 'go': 'Golang', 'hello': 'Hey'})
+        >>> s = 'Hello, I love learning Py, aka: Python, and I plan to learn about Go as well.'
+        >>> kp.extract_keywords(s)
+        ['Hey', 'Python', 'Golang']
+        >>> kp.extract_keywords(s, span_info=True)
+        [('Hey', 0, 5), ('Python', 23, 25), ('Golang', 66, 68)]
 
         :param sentence: str
         :param span_info: bool, default False
@@ -43,8 +61,7 @@ class KeywordProcessor(TrieDict):
         >>> from flashtext2 import KeywordProcessor
         >>> kp = KeywordProcessor()
         >>> kp.add_keywords_from_dict({'py': 'Python', 'go': 'Golang', 'hello': 'Hey'})
-        >>> my_str = 'Hello, I love learning Py, aka: Python, and I plan to learn about Go as well. ' \
-        '(I can ignore substrings as well, for ex: goal)'
+        >>> my_str = 'Hello, I love learning Py, aka: Python, and I plan to learn about Go as well.'
         >>> list(kp.extract_keywords_iter(my_str))
         [('Hey', 0, 5), ('Python', 23, 25), ('Golang', 66, 68)]
 
@@ -89,11 +106,9 @@ class KeywordProcessor(TrieDict):
         >>> from flashtext2 import KeywordProcessor
         >>> kp = KeywordProcessor()
         >>> kp.add_keywords_from_dict({'py': 'Python', 'go': 'Golang', 'hello': 'Hey'})
-        >>> my_str = 'Hello, I love learning Py, aka: Python, and I plan to learn about Go as well. ' \
-        '(I can ignore substrings as well, for ex: goal)'
+        >>> my_str = 'Hello, I love learning Py, aka: Python, and I plan to learn about Go as well.'
         >>> kp.replace_keywords(my_str)
-        'Hey, I love learning Python, aka: Python, and I plan to learn about Golang as well.
-        (I can ignore substrings as well, for ex: goal)'
+        'Hey, I love learning Python, aka: Python, and I plan to learn about Golang as well.'
 
         :param sentence: str
         :return: new sentence with the words replaced

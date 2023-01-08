@@ -1,49 +1,14 @@
 from __future__ import annotations
 
-import functools
-import inspect
+from typing import Generator, Any, TypeVar
 
-from typing import TYPE_CHECKING, Callable, Generator, Any, Sequence, Iterator, TypeVar
-
-if TYPE_CHECKING:
-    from .keyword_processor import TrieDict
 
 __all__ = [
-    'normalize_parameter',
     'yield_nested_dict_items',
     'convert_trie_to_dict',
-    'enumerate_shifted',
 ]
 
 T = TypeVar('T')
-
-
-def normalize_parameter(*params: str) -> Callable:
-    """
-    Instead of doing this at the beginning of each function:
-    if not self.case_sensitive:
-        word = word.lower()
-
-    We can just decorate the function with: `@normalize_parameter('parameter_name')`
-
-    :param params: parameter names
-    """
-    def decorator(func):
-        @functools.wraps(func)
-        def wrapper(*args, **kwargs):
-
-            kwargs = inspect.getcallargs(func, *args, **kwargs)  # convert all args and def parameters to dict/kwargs
-            self: TrieDict = kwargs['self']
-
-            if not self._case_sensitive:
-                for p in params:
-                    value = kwargs.get(p)
-                    if value:
-                        kwargs[p] = value.lower()
-
-            return func(**kwargs)
-        return wrapper
-    return decorator
 
 
 def yield_nested_dict_items(dct: dict) -> Generator[tuple[str, Any], None, None]:
@@ -80,9 +45,3 @@ def convert_trie_to_dict(dct: dict[str, dict | str], s: str = '', mapping: dict 
         elif isinstance(val, dict):
             convert_trie_to_dict(val, s=s + key, mapping=mapping)
     return mapping
-
-
-# list(enumerate_shifted('abcdef', start=3)) == ['d', 'e', 'f']
-def enumerate_shifted(seq: Sequence[T], start: int) -> Iterator[tuple[int, T]]:
-    for i in range(start, len(seq)):
-        yield i, seq[i]
