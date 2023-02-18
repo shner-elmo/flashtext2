@@ -77,7 +77,7 @@ all the methods and functions are fully typed.
 Simplicity is great, but how is the performance?
 
 I created some benchmarks which you could find [here](https://github.com/shner-elmo/FlashText2.0/tree/master/benchmarks), 
-and it turns out that for extracting keywords it is a bit slower than original package:
+and it turns out that for extracting keywords it is a bit slower than the original package:
 
 ![Image](benchmarks/extract-keywords.png)
 
@@ -90,30 +90,27 @@ But for replacing keywords, it is much faster!
 ## Quick Start
 Import and initialize the class:
 ```py
-from flashtext2 import KeywordProcessor
-kp = KeywordProcessor()
+>>> from flashtext2 import KeywordProcessor
+>>> kp = KeywordProcessor()
 ```
 
 Add a bunch of words:
 ```py
-kp.add_keywords_from_dict({'py': 'Python', 'go': 'Golang', 'hello': 'hey'})
+>>> kp.add_keywords_from_dict({'py': 'Python', 'go': 'Golang', 'hello': 'hey'})
 ```
 The dictionary keys represent the words that we want to search in the string, 
 and the values are their corresponding 'clean word'.
 
 Check how many words we added:
 ```py
-len(kp)
-```
-```
+>>> len(kp)
 3
 ```
 
 We can see how the key/values are stored in the trie dict:
-```py
-kp.trie_dict
-```
-```
+```python
+>>> kp.trie_dict
+import doctest
 {'p': {'y': {'__keyword__': 'Python'}},
  'g': {'o': {'__keyword__': 'Golang'}},
  'h': {'e': {'l': {'l': {'o': {'__keyword__': 'hey'}}}}}}
@@ -127,8 +124,7 @@ from flashtext2 import KeywordProcessor
 kp = KeywordProcessor()
 kp.add_keywords_from_dict({'py': 'Python', 'go': 'Golang', 'hello': 'Hey'})
 
-my_str = 'Hello, I love learning Py, aka: Python, and I plan to learn about Go as well. ' \
-'(I can ignore substrings as well, for ex: goal)'
+my_str = 'Hello, I love learning Py, aka: Python, and I plan to learn about Go as well.'
 
 kp.extract_keywords(my_str)
 ```
@@ -144,7 +140,6 @@ kp.extract_keywords(my_str)
 kp.replace_keywords(my_str)
 ```
 ```
-'Hey, I love learning Python, aka: Python, and I plan to learn about Golang as well. 
-(I can ignore substrings as well, for ex: goal)'
+'Hey, I love learning Python, aka: Python, and I plan to learn about Golang as well.'
 ```
 

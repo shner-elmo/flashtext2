@@ -8,3 +8,7 @@ readme = "README.md"
 
 repository = "https://github.com/shner-elmo/FlashText2.0"
 documentation = "https://github.com/shner-elmo/FlashText2.0/blob/master/README.md"
+
+# https://peps.python.org/pep-0621/#details
+# https://packaging.python.org/en/latest/specifications/declaring-project-metadata/#declaring-project-metadata
+# https://github.com/Preocts/python-src-template/blob/main/pyproject.toml#L5-L10

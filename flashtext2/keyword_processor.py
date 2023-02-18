@@ -68,34 +68,8 @@ class KeywordProcessor(TrieDict):
         :param sentence: str
         :return: Generator
         """
-        if not self._case_sensitive:
-            sentence = sentence.lower()
-
-        keyword_key = self.keyword
-        trie_dict = self.trie_dict
-        non_word_boundaries = self.non_word_boundaries
-        sentence_len = len(sentence)
-        prev_char: str | None = None
-
-        for idx, char in enumerate(sentence):
-            # if prev_char not in [A-Za-z0-9_] AND the next char is in [A-Za-z0-9_]
-            if prev_char not in non_word_boundaries and char in non_word_boundaries:
-                longest_kw_tup: tuple[str, int, int] | None = None  # (keyword, start_pos, end_pos)
-
-                node = trie_dict
-                for i in range(idx, sentence_len):
-                    node = node.get(sentence[i])
-
-                    if node is None:
-                        break
-                    kw = node.get(keyword_key)
-                    # if kw AND (it's the last char in the sentence OR the next char is not in [A-Za-z0-9_])
-                    if kw and (i == sentence_len - 1 or sentence[i + 1] not in non_word_boundaries):
-                        longest_kw_tup = (kw, idx, i + 1)  # the last keyword will automatically be the longest
-
-                if longest_kw_tup:
-                    yield longest_kw_tup
-            prev_char = char
+        # TODO add `overlapping: bool` param
+        ...
 
     def replace_keywords(self, sentence: str) -> str:
         """
