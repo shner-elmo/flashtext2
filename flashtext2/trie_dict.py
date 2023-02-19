@@ -1,16 +1,16 @@
 from __future__ import annotations
 
+import re
 from collections import deque
 from typing import Iterable, Iterator
 
 from .exceptions import WordNotFoundError
-import re
 
 
 class TrieDict:
     __slots__ = ('_case_sensitive', '_trie_dict', '_keywords_dict')
     keyword = '__keyword__'
-    _split_pattern = re.compile(r'([^a-zA-Z\d]+)')
+    _split_pattern = re.compile(r'([^a-zA-Z\d])')
 
     def __init__(self, case_sensitive: bool = False) -> None:
         self._case_sensitive = case_sensitive  # shouldn't be changed after __init__()

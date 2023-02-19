@@ -3,7 +3,7 @@ from __future__ import annotations
 import string
 from typing import Iterator, Literal, overload
 
-from .trie_dict import TrieDict
+from flashtext2.trie_dict import TrieDict
 
 
 class KeywordProcessor(TrieDict):
@@ -52,6 +52,7 @@ class KeywordProcessor(TrieDict):
             return list(self.extract_keywords_iter(sentence))
         return [tup[0] for tup in self.extract_keywords_iter(sentence)]
 
+    # TODO add `overlapping: bool` param
     def extract_keywords_iter(self, sentence: str) -> Iterator[tuple[str, int, int]]:
         """
         Get a generator that yields the keywords and their start/end position as a tuple (keyword, start_idx, end_idx)
@@ -68,8 +69,38 @@ class KeywordProcessor(TrieDict):
         :param sentence: str
         :return: Generator
         """
-        # TODO add `overlapping: bool` param
-        ...
+        if not self._case_sensitive:
+            sentence = sentence.lower()
+
+        trie = self.trie_dict
+        keyword = self.keyword
+        words: list[str] = self._split_pattern.split(sentence)
+
+        len_words = len(words)
+        idx = 0
+        while idx < len_words:
+
+            # longest_match: tuple[str, int, int] | None = None
+            longest_match: str | None = None
+            n_words_covered = 0
+            node = trie
+            for i in range(idx, len_words):
+                word = words[i]
+                n_words_covered += 1
+
+                node = node.get(word)
+                if node:  # try using the walrus operator
+                    kw_found = node.get(keyword)
+                    if kw_found:
+                        longest_match = kw_found
+                else:
+                    break
+
+            if longest_match:
+                yield longest_match,
+                idx += n_words_covered
+            else:
+                idx += 1
 
     def replace_keywords(self, sentence: str) -> str:
         """
@@ -94,3 +125,9 @@ class KeywordProcessor(TrieDict):
             prev_end = end
         # after replacing all the keywords we need to get the text between the last keyword and the end of the sentence
         return s + sentence[prev_end:]
+
+
+# kp = KeywordProcessor()
+# kp.add_keywords_from_dict({'Distributed Super Computing': ['distributed super computing']})
+# out = kp.extract_keywords('distributed super distributed super computing')
+# print(out)
