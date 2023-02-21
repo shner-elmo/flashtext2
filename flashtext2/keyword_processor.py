@@ -74,9 +74,9 @@ class KeywordProcessor(TrieDict):
 
         trie = self.trie_dict
         keyword = self.keyword
-        words: list[str] = self._split_pattern.split(sentence)
-
+        words: list[str] = self.split_sentence(sentence) + ['']
         len_words = len(words)
+
         idx = 0
         while idx < len_words:
 
@@ -98,7 +98,7 @@ class KeywordProcessor(TrieDict):
 
             if longest_match:
                 yield longest_match,
-                idx += n_words_covered
+                idx += n_words_covered - 1
             else:
                 idx += 1
 

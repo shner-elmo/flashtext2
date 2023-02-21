@@ -10,12 +10,22 @@ from .exceptions import WordNotFoundError
 class TrieDict:
     __slots__ = ('_case_sensitive', '_trie_dict', '_keywords_dict')
     keyword = '__keyword__'
-    _split_pattern = re.compile(r'([^a-zA-Z\d])')
 
     def __init__(self, case_sensitive: bool = False) -> None:
         self._case_sensitive = case_sensitive  # shouldn't be changed after __init__()
         self._trie_dict = {}
         self._keywords_dict: dict[str, str] = {}  # dict[word, clean_word]
+
+    @staticmethod
+    def split_sentence(sentence: str) -> list[str]:
+        """
+        Return an iterable that yields parts of the sentence (words, characters, or a mix of both ...)
+
+        Since there are different ways to split the sentence and store it into the trie-dict or to extract its
+        components from a string, it's best to have all this code in one place.
+        """
+        # TODO add self.split_sentence_iter() to take advantage of splitters that are generators
+        return re.compile(r'([^a-zA-Z\d])').split(sentence)
 
     @property
     def trie_dict(self) -> dict:
@@ -60,7 +70,7 @@ class TrieDict:
             word = word.lower()
 
         node = self._trie_dict
-        for token in self._split_pattern.split(word):
+        for token in self.split_sentence(sentence=word):
             node = node.setdefault(token, {})
 
         node[TrieDict.keyword] = clean_word
@@ -117,7 +127,7 @@ class TrieDict:
 
     def _node_iterator(self, word: str) -> Iterator[dict]:
         """
-        A helper function that yields each node (dictionary) for each character from the given word
+        A helper function that yields each node (dictionary) for each token from the given word
 
         :param word: str
         :return: None
@@ -129,12 +139,12 @@ class TrieDict:
             word = word.lower()
 
         node = self._trie_dict
-        for idx, char in enumerate(word):
+        for idx, token in enumerate(self.split_sentence(word)):
             try:
-                node = node[char]
+                node = node[token]
             except KeyError:
-                raise WordNotFoundError(
-                    f'Not able to locate "{word}" in the Trie Dict. (failed at character "{word[idx]}")')
+                raise WordNotFoundError(f'Not able to locate "{word}" in the Trie Dict. '
+                                        f'(failed at character "{list(self.split_sentence(word))[idx]}")')
             yield node
 
     def get_keyword(self, word: str) -> str | None:
