@@ -135,7 +135,7 @@ One major change in FlashText 2.0 is that the keywords are splitted by words and
 For example, if you were to add the keyword/sentence `"I love .NET"` it would be stored like this:
 ```py
 kp2 = KeywordProcessor()
-kp2.add_keyword("I love .NET")
+kp2.add_keyword("I love .NET")  # not actually :)
 >>> kp2.trie_dict
 ```
 ```

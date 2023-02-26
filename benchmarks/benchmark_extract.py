@@ -76,11 +76,11 @@ def main():
     df = pd.DataFrame({
         'count': count,
         'flashtext': time1,
-        'flashtext 2.0 (beta)': time2,
+        'flashtext 2.0': time2,
         # 'flashtext 2.0 (beta)': time3,
     })
     plt = df.plot.line(title='Time For Extracting Keywords', x='count', xlabel='Word Count',
-                       ylabel='Seconds', y=['flashtext', 'flashtext 2.0 (beta)'], grid=True)
+                       ylabel='Seconds', y=['flashtext', 'flashtext 2.0'], grid=True)
     plt.figure.savefig('extract-keywords.png')
 
 
