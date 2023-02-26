@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Iterator, Literal, overload
 
-from flashtext2.trie_dict import TrieDict
+from .trie_dict import TrieDict
 
 
 class KeywordProcessor(TrieDict):
