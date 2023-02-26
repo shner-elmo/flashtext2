@@ -52,7 +52,6 @@ class KeywordProcessor(TrieDict):
             return list(self.extract_keywords_iter(sentence))
         return [tup[0] for tup in self.extract_keywords_iter(sentence)]
 
-    # TODO add `overlapping: bool` param
     def extract_keywords_iter(self, sentence: str) -> Iterator[tuple[str, int, int]]:
         """
         Get a generator that yields the keywords and their start/end position as a tuple (keyword, start_idx, end_idx)
@@ -73,11 +72,14 @@ class KeywordProcessor(TrieDict):
             sentence = sentence.lower()
 
         words: list[str] = self.split_sentence(sentence) + ['']
+        lst_len: list[int] = list(map(len, words))  # cache the len() of each word
         keyword = self.keyword
         trie = self.trie_dict
         node = trie
 
         last_kw_found: str | None = None
+        last_kw_found_idx: tuple[int, int] | None = None
+        last_start_span: tuple[int, int] | None = None
         n_words_covered = 0
         idx = 0
         while idx < len(words):
@@ -89,9 +91,20 @@ class KeywordProcessor(TrieDict):
                 kw = node.get(keyword)
                 if kw:
                     last_kw_found = kw
+                    last_kw_found_idx = (idx, n_words_covered)
             else:
                 if last_kw_found is not None:
-                    yield last_kw_found,
+                    kw_end_idx, kw_n_covered = last_kw_found_idx
+                    start_span_idx = kw_end_idx - kw_n_covered + 1
+
+                    if last_start_span is None:
+                        start_span = sum(lst_len[:start_span_idx])
+                    else:
+                        start_span = last_start_span[1] + sum(lst_len[last_start_span[0]:start_span_idx])
+                    last_start_span = start_span_idx, start_span  # cache the len() for the given slice for next time
+
+                    yield last_kw_found, start_span, start_span + sum(
+                        lst_len[start_span_idx:start_span_idx + kw_n_covered])
                     last_kw_found = None
                     idx -= 1
                 else:
