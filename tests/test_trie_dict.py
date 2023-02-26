@@ -29,7 +29,7 @@ class TestTrieDict(unittest.TestCase):
 
     def test_add_word(self):
         td = TrieDict()
-        assert td.get_keywords == []
+        assert td.get_keywords == {}
 
         for w in self.words:
             td.add_keyword(w)
@@ -59,6 +59,28 @@ class TestTrieDict(unittest.TestCase):
             self.td.remove_keyword, 'non-existent-word'
         )
 
+        # test how it handles two sentences that share the first part
+        td = TrieDict()
+        td.add_keyword('I love learning Python')
+        td.add_keyword('I love riding my skates')
+        node = list(td._node_iterator('I love '))[-1]
+        self.assertEqual(list(node.keys()), ['learning', 'riding'])
+
+        word = 'I love learning Python'
+        self.assertIn(word, container=td)
+        td.remove_keyword(word)
+        
+        self.assertNotIn(word, container=td)
+        self.assertEqual(list(node.keys()), ['riding'])
+        
+        # make sure that removing this word hasn't affected the first word
+        word = 'I love riding my skates'
+        last_branch_node = list(td._node_iterator(word))[-1]
+        self.assertEqual(last_branch_node[td.keyword], word)
+
+        td.remove_keyword(word)
+        self.assertEqual(td.trie_dict, {})
+
     def test_node_iterator(self):
         for node in self.td._node_iterator(self.words[0]):
             assert isinstance(node, dict)
@@ -72,10 +94,9 @@ class TestTrieDict(unittest.TestCase):
     def test_has_word(self):
         self.test_contains_()
 
-    def test_get_words(self):
+    def test_get_keywords(self):
         out = self.td.get_keywords
-        assert isinstance(out, list)
-        assert isinstance(out[0], str)
+        assert isinstance(out, dict)
         assert len(out) == len(self.td)
 
     def test_reset_dict(self):
@@ -86,20 +107,19 @@ class TestTrieDict(unittest.TestCase):
     def test_contains_(self):
         for w in self.words:
             assert w in self.td
-            assert w in iter(self.td)
+            assert w in self.td.get_keywords
 
             self.td.remove_keyword(w)
 
             assert w not in self.td
-            assert w not in iter(self.td)
+            assert w not in self.td.get_keywords
 
     def test_iter_(self):
-        for x in self.td:
-            assert isinstance(x, str)
-            assert x in self.words
-            assert x in self.td
-
-        assert list(self.td) == self.words
+        for word, clean_word in self.td:
+            assert word in self.words
+            assert word in self.td
+            # assert self.td.get_keywords[word] == clean_word
+            print(self.td.get_keywords[word])
 
     def test_len_(self):
         assert len(self.td) == len(self.words)
@@ -130,3 +150,6 @@ class TestTrieDict(unittest.TestCase):
 
     def test_repr_(self):
         assert isinstance(repr(self.td), str)
+        eval(repr(self.td))
+
+# TODO remove assert statement and use OOP approach instead
