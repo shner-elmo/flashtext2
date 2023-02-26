@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import re
-from collections import deque
 from typing import Iterable, Iterator
 
 from .exceptions import WordNotFoundError
@@ -25,7 +24,7 @@ class TrieDict:
         components from a string, it's best to have all this code in one place.
         """
         # TODO add self.split_sentence_iter() to take advantage of splitters that are generators
-        return re.compile(r'([^a-zA-Z\d])').split(sentence)
+        return list(filter(None, re.split(r'([^a-zA-Z\d])', sentence)))  # remove all the empty strings
 
     @property
     def trie_dict(self) -> dict:
@@ -115,13 +114,13 @@ class TrieDict:
 
         if len(node) == 0:  # if last node has no children we can safely delete prior nodes
             if last_multi_node_idx is None:
-                del self._trie_dict[word[0]]  # remove the beginning of the tree
+                # remove everything from the root of the branch
+                del self._trie_dict[self.split_sentence(sentence=word)[0]]
             else:
                 # remove all the nodes between the last node that had multiple children and the last letter of our word
-                chars_seq = word[:last_multi_node_idx + 1]  # node characters that we need to keep
-                first_char_to_remove = word.removeprefix(chars_seq)[0]
-                last_node = deque(self._node_iterator(word=chars_seq), maxlen=1)[0]  # iterate in C and keep last item
-                del last_node[first_char_to_remove]
+                last_multi_node = list(self._node_iterator(word=word))[last_multi_node_idx]
+                first_token_to_remove = self.split_sentence(sentence=word)[last_multi_node_idx + 1]
+                del last_multi_node[first_token_to_remove]
 
         del self._keywords_dict[word]
 

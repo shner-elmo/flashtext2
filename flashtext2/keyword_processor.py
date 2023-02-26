@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import string
 from typing import Iterator, Literal, overload
 
 from flashtext2.trie_dict import TrieDict
