@@ -1,5 +1,13 @@
 # FlashText 2.0
 
+
+----
+
+
+[![PyPi](https://img.shields.io/badge/PyPi-0.1.0-yellow)](https://pypi.org/project/flashtext2/)
+[![Downloads](https://pepy.tech/badge/flashtext2)](https://pepy.tech/project/flashtext2)
+[![Downloads](https://pepy.tech/badge/flashtext2/month)](https://pepy.tech/project/flashtext2)
+
 ----
 [`flashtext`](https://github.com/vi3k6i5/flashtext)
 is great, but wouldn't it be nice if the code was much simpler, so instead of 
@@ -173,3 +181,11 @@ kp.replace_keywords(my_str)
 ### Acknowledgements
 Credit goes to the original FlashText package author; [Vikash Singh](https://github.com/vi3k6i5/),
 and to [decorator-factory](https://github.com/decorator-factory) for optimizing the algorithm.
+
+
+#### What's next
+
+* Optimized the extract_keywords() algorithm
+* Experiment with Cython to speed up everything
+* Add a selection algorithms for extracting different things (words, substrings, sentences, etc.) 
+* Improve tests
