@@ -1,14 +1,21 @@
 # FlashText 2.0
 
+### FlashText rewritten from scratch.
 
-----
-
+---
 
 [![PyPi](https://img.shields.io/badge/PyPi-0.1.0-yellow)](https://pypi.org/project/flashtext2/)
 [![Downloads](https://pepy.tech/badge/flashtext2)](https://pepy.tech/project/flashtext2)
 [![Downloads](https://pepy.tech/badge/flashtext2/month)](https://pepy.tech/project/flashtext2)
 
-----
+You can get the package directly from [PyPI](https://pypi.org/project/flashtext2/)
+```
+pip install flashtext2
+```
+
+---
+
+
 [`flashtext`](https://github.com/vi3k6i5/flashtext)
 is great, but wouldn't it be nice if the code was much simpler, so instead of 
 [this](https://github.com/vi3k6i5/flashtext/blob/5591859aabe3da37499a20d0d0d6dd77e480ed8d/flashtext/keyword.py#L470-L558):
@@ -139,7 +146,7 @@ We can see how the key/values are stored in the trie dict:
  'hello': {'__keyword__': 'hey'}}
 ```
 
-One major change in FlashText 2.0 is that the keywords are splitted by words and non-words groups instead of characters.
+One major change in FlashText 2.0 is that the keywords are separated by words and non-words groups instead of characters.
 For example, if you were to add the keyword/sentence `"I love .NET"` it would be stored like this:
 ```py
 kp2 = KeywordProcessor()
