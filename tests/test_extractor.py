@@ -25,8 +25,8 @@ class TestKeywordExtractor(unittest.TestCase):
         for test_id, test_case in enumerate(self.test_cases):
             kp = KeywordProcessor()
             kp.add_keywords_from_dict(test_case['keyword_dict'])
-            keywords_extracted = kp.extract_keywords(test_case['sentence'])
-            self.assertEqual(keywords_extracted, test_case['keywords'], (test_id, test_case))
+            keywords_extracted = kp.extract_keywords(test_case['sentence'], span_info=False)
+            self.assertEqual(test_case['keywords'], keywords_extracted, (test_id, test_case))
 
     def test_extract_keywords_case_sensitive(self):
         """
@@ -37,5 +37,5 @@ class TestKeywordExtractor(unittest.TestCase):
         for test_id, test_case in enumerate(self.test_cases):
             kp = KeywordProcessor(case_sensitive=True)
             kp.add_keywords_from_dict(test_case['keyword_dict'])
-            keywords_extracted = kp.extract_keywords(test_case['sentence'])
-            self.assertEqual(keywords_extracted, test_case['keywords_case_sensitive'], (test_id, test_case))
+            keywords_extracted = kp.extract_keywords(test_case['sentence'], span_info=False)
+            self.assertEqual(test_case['keywords_case_sensitive'], keywords_extracted, (test_id, test_case))
