@@ -15,7 +15,6 @@ class KeywordProcessor(TrieDict):
 
         :param case_sensitive: bool, default False
         """
-        self.non_word_boundaries: set[str] = set(string.digits + string.ascii_letters + '_')
         super().__init__(case_sensitive)
 
     @overload
