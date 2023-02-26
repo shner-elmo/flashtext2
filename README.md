@@ -168,3 +168,8 @@ kp.replace_keywords(my_str)
 ```
 'Hey, I love learning Python, aka: Python, and I plan to learn about Golang as well.'
 ```
+
+
+### Acknowledgements
+Credit goes to the original FlashText package author; [Vikash Singh](https://github.com/vi3k6i5/),
+and to [decorator-factory](https://github.com/decorator-factory) for optimizing the algorithm.
