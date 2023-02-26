@@ -5,71 +5,87 @@
 is great, but wouldn't it be nice if the code was much simpler, so instead of 
 [this](https://github.com/vi3k6i5/flashtext/blob/5591859aabe3da37499a20d0d0d6dd77e480ed8d/flashtext/keyword.py#L470-L558):
 ```py
-    def extract_keywords(self, sentence, span_info=False):
-        keywords_extracted = []
-        if not sentence:
-            # if sentence is empty or none just return empty list
-            return keywords_extracted
-        if not self.case_sensitive:
-            sentence = sentence.lower()
-        current_dict = self.keyword_trie_dict
-        sequence_start_pos = 0
-        sequence_end_pos = 0
-        reset_current_dict = False
-        idx = 0
-        sentence_len = len(sentence)
-        while idx < sentence_len:
-            char = sentence[idx]
-            # when we reach a character that might denote word end
-            if char not in self.non_word_boundaries:
+def extract_keywords(self, sentence, span_info=False):
+    keywords_extracted = []
+    if not sentence:
+        # if sentence is empty or none just return empty list
+        return keywords_extracted
+    if not self.case_sensitive:
+        sentence = sentence.lower()
+    current_dict = self.keyword_trie_dict
+    sequence_start_pos = 0
+    sequence_end_pos = 0
+    reset_current_dict = False
+    idx = 0
+    sentence_len = len(sentence)
+    while idx < sentence_len:
+        char = sentence[idx]
+        # when we reach a character that might denote word end
+        if char not in self.non_word_boundaries:
 
-                # if end is present in current_dict
-                if self._keyword in current_dict or char in current_dict:
-                    # update longest sequence found
-                    sequence_found = None
-                    longest_sequence_found = None
-                    is_longer_seq_found = False
-                    if self._keyword in current_dict:
-                        sequence_found = current_dict[self._keyword]
-                        longest_sequence_found = current_dict[self._keyword]
-                        sequence_end_pos = idx
-                        
+            # if end is present in current_dict
+            if self._keyword in current_dict or char in current_dict:
+                # update longest sequence found
+                sequence_found = None
+                longest_sequence_found = None
+                is_longer_seq_found = False
+                if self._keyword in current_dict:
+                    sequence_found = current_dict[self._keyword]
+                    longest_sequence_found = current_dict[self._keyword]
+                    sequence_end_pos = idx
+                    
     # and many more lines ... (89 lines in total)
 ```
-We would get [this](https://github.com/shner-elmo/FlashText2.0/blob/master/flashtext2/keyword_processor.py#L54#L81):
+We would have [this](https://github.com/shner-elmo/FlashText2.0/blob/master/flashtext2/keyword_processor.py#L54#L81):
 ```py
-    def extract_keywords_iter(self, sentence: str) -> Iterator[tuple[str, int, int]]:
-        if not self._case_sensitive:
-            sentence = sentence.lower()
-    
-        keyword_key = self.keyword
-        trie_dict = self.trie_dict
-        non_word_boundaries = self.non_word_boundaries
-        sentence_len = len(sentence)
-        prev_char: str | None = None
-    
-        for idx, char in enumerate(sentence):
-            # if prev_char not in [A-Za-z0-9_] AND the next char is in [A-Za-z0-9_]
-            if prev_char not in non_word_boundaries and char in non_word_boundaries:
-                longest_kw_tup: tuple[str, int, int] | None = None  # (keyword, start_pos, end_pos)
-    
-                node = trie_dict
-                for i in range(idx, sentence_len):
-                    node = node.get(sentence[i])
-    
-                    if node is None:
-                        break
-                    kw = node.get(keyword_key)
-                    # if kw AND (it's the last char in the sentence OR the next char is not in [A-Za-z0-9_])
-                    if kw and (i == sentence_len - 1 or sentence[i + 1] not in non_word_boundaries):
-                        longest_kw_tup = (kw, idx, i + 1)  # the last keyword will automatically be the longest
-    
-                if longest_kw_tup:
-                    yield longest_kw_tup
-            prev_char = char
+def extract_keywords_iter(self, sentence: str) -> Iterator[tuple[str, int, int]]:
+    if not self._case_sensitive:
+        sentence = sentence.lower()
+
+    words: list[str] = self.split_sentence(sentence) + ['']
+    lst_len: list[int] = list(map(len, words))  # cache the len() of each word
+    keyword = self.keyword
+    trie = self.trie_dict
+    node = trie
+
+    last_kw_found: str | None = None
+    last_kw_found_idx: tuple[int, int] | None = None
+    last_start_span: tuple[int, int] | None = None
+    n_words_covered = 0
+    idx = 0
+    while idx < len(words):
+        word = words[idx]
+
+        n_words_covered += 1
+        node = node.get(word)
+        if node:
+            kw = node.get(keyword)
+            if kw:
+                last_kw_found = kw
+                last_kw_found_idx = (idx, n_words_covered)
+        else:
+            if last_kw_found is not None:
+                kw_end_idx, kw_n_covered = last_kw_found_idx
+                start_span_idx = kw_end_idx - kw_n_covered + 1
+
+                if last_start_span is None:
+                    start_span = sum(lst_len[:start_span_idx])
+                else:
+                    start_span = last_start_span[1] + sum(lst_len[last_start_span[0]:start_span_idx])
+                last_start_span = start_span_idx, start_span  # cache the len() for the given slice for next time
+
+                yield last_kw_found, start_span, start_span + sum(
+                    lst_len[start_span_idx:start_span_idx + kw_n_covered])
+                last_kw_found = None
+                idx -= 1
+            else:
+                idx -= n_words_covered - 1
+            node = trie
+            n_words_covered = 0
+        idx += 1
 ```
 Much more readable, right?  
-Also, other than rewriting all the functions with simpler and more intuitive code,
+Also, other than rewriting all the functions with simpler, shorter, and more intuitive code,
 all the methods and functions are fully typed.
 
 ## Performance
@@ -77,12 +93,12 @@ all the methods and functions are fully typed.
 Simplicity is great, but how is the performance?
 
 I created some benchmarks which you could find [here](https://github.com/shner-elmo/FlashText2.0/tree/master/benchmarks), 
-and it turns out that for extracting keywords it is a bit slower than the original package:
+and it turns out that both for extracting and replacing keywords it is faster than the original package:
 
+Extracting keywords:
 ![Image](benchmarks/extract-keywords.png)
 
-But for replacing keywords, it is much faster! 
-
+Replacing keywords:
 ![Image](benchmarks/replace-keywords.png)
 
 
@@ -110,14 +126,24 @@ Check how many words we added:
 We can see how the key/values are stored in the trie dict:
 ```python
 >>> kp.trie_dict
-import doctest
-{'p': {'y': {'__keyword__': 'Python'}},
- 'g': {'o': {'__keyword__': 'Golang'}},
- 'h': {'e': {'l': {'l': {'o': {'__keyword__': 'hey'}}}}}}
+{'py': {'__keyword__': 'Python'},
+ 'go': {'__keyword__': 'Golang'},
+ 'hello': {'__keyword__': 'hey'}}
+```
+
+One major change in FlashText 2.0 is that the keywords are splitted by words and non-words groups instead of characters.
+For example, if you were to add the keyword/sentence `"I love .NET"` it would be stored like this:
+```py
+kp2 = KeywordProcessor()
+kp2.add_keyword("I love .NET")
+>>> kp2.trie_dict
+```
+```
+{'i': {' ': {'love': {' ': {'': {'.': {'net': {'__keyword__': 'I love .NET'}}}}}}}}
 ```
 
 
-### Extract Keywords
+### Extracting Keywords
 
 ```py
 from flashtext2 import KeywordProcessor
@@ -142,4 +168,3 @@ kp.replace_keywords(my_str)
 ```
 'Hey, I love learning Python, aka: Python, and I plan to learn about Golang as well.'
 ```
-
