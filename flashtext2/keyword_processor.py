@@ -67,6 +67,50 @@ class KeywordProcessor(TrieDict):
         :param sentence: str
         :return: Generator
         """
+        if not self._case_sensitive:
+            sentence = sentence.lower()
+
+        words: list[str] = self.split_sentence(sentence) + ['']
+        lst_len: list[int] = list(map(len, words))  # cache the len() of each word
+        keyword = self.keyword
+        trie = self.trie_dict
+        node = trie
+
+        last_kw_found: str | None = None
+        last_kw_found_idx: tuple[int, int] | None = None
+        last_start_span: tuple[int, int] | None = None
+        n_words_covered = 0
+        idx = 0
+        while idx < len(words):
+            word = words[idx]
+
+            n_words_covered += 1
+            node = node.get(word)
+            if node:
+                kw = node.get(keyword)
+                if kw:
+                    last_kw_found = kw
+                    last_kw_found_idx = (idx, n_words_covered)
+            else:
+                if last_kw_found is not None:
+                    kw_end_idx, kw_n_covered = last_kw_found_idx
+                    start_span_idx = kw_end_idx - kw_n_covered + 1
+
+                    if last_start_span is None:
+                        start_span = sum(lst_len[:start_span_idx])
+                    else:
+                        start_span = last_start_span[1] + sum(lst_len[last_start_span[0]:start_span_idx])
+                    last_start_span = start_span_idx, start_span  # cache the len() for the given slice for next time
+
+                    yield last_kw_found, start_span, start_span + sum(
+                        lst_len[start_span_idx:start_span_idx + kw_n_covered])
+                    last_kw_found = None
+                    idx -= 1
+                else:
+                    idx -= n_words_covered - 1
+                node = trie
+                n_words_covered = 0
+            idx += 1
 
     def replace_keywords(self, sentence: str) -> str:
         """
