@@ -17,7 +17,10 @@ class TestTrieDict(unittest.TestCase):
             'macromolecular',
             'macro',
             'macroscopic',
-            'macronuclear'
+            'macronuclear',
+            'I love Python',
+            'How are you doing?',
+            'They say that .NET is great! (just kidding)',
         ]
         self.td = TrieDict()
         for w in self.words:
@@ -33,7 +36,7 @@ class TestTrieDict(unittest.TestCase):
 
         for w in self.words:
             td.add_keyword(w)
-        assert sorted(td.get_keywords) == sorted(self.words)
+        assert sorted(td.get_keywords.values()) == sorted(self.words)
 
         # add same words twice
         for w in self.words:
