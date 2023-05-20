@@ -3,16 +3,17 @@ from __future__ import annotations
 import re
 from typing import Iterable, Iterator
 
-from .exceptions import WordNotFoundError
+from .exceptions import WordNotFoundError, MatchingConflictException
 
 
 class TrieDict:
-    __slots__ = ('_case_sensitive', '_trie_dict', '_keywords_dict')
+    __slots__ = ('_case_sensitive', '_trie_dict', '_keywords_dict', 'include_keys')
     keyword = '__keyword__'
 
-    def __init__(self, case_sensitive: bool = False) -> None:
+    def __init__(self, case_sensitive: bool = False, include_keys = True) -> None:
         self._case_sensitive = case_sensitive  # shouldn't be changed after __init__()
         self._trie_dict = {}
+        self.include_keys = include_keys
         self._keywords_dict: dict[str, str] = {}  # dict[word, clean_word]
 
     @staticmethod
@@ -63,17 +64,23 @@ class TrieDict:
         :param clean_word: str, optional
         :return: None
         """
-        if not clean_word:
+        words = {word: clean_word, clean_word: clean_word}
+        if not clean_word or self.include_keys is False:
             clean_word = word
-        if not self._case_sensitive:
-            word = word.lower()
+            words = {word: clean_word}
 
-        node = self._trie_dict
-        for token in self.split_sentence(sentence=word):
-            node = node.setdefault(token, {})
+        for word, clean_word in words.items():
+            if not self._case_sensitive:
+                word = word.lower()
 
-        node[TrieDict.keyword] = clean_word
-        self._keywords_dict[word] = clean_word
+            node = self._trie_dict
+            for token in self.split_sentence(sentence=word):
+                node = node.setdefault(token, {})
+
+            node[TrieDict.keyword] = clean_word
+            if word in self._keywords_dict.keys() and self._keywords_dict[word] != clean_word:
+                raise MatchingConflictException(word, self._keywords_dict[word], clean_word)
+            self._keywords_dict[word] = clean_word
 
     def remove_keyword(self, word: str) -> None:
         """

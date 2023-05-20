@@ -6,7 +6,7 @@ from .trie_dict import TrieDict
 
 
 class KeywordProcessor(TrieDict):
-    def __init__(self, case_sensitive: bool = False) -> None:
+    def __init__(self, case_sensitive: bool = False, include_keys = True) -> None:
         """
         Initialize the Keyword Processor
 
@@ -14,7 +14,7 @@ class KeywordProcessor(TrieDict):
 
         :param case_sensitive: bool, default False
         """
-        super().__init__(case_sensitive)
+        super().__init__(case_sensitive, include_keys)
 
     @overload
     def extract_keywords(self, sentence: str, span_info: bool = False) -> list[str]:
