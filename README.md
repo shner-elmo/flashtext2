@@ -1,4 +1,4 @@
-# FlashText 2.0
+# flashtext 2.0
 
 ### FlashText rewritten from scratch.
 
@@ -51,24 +51,22 @@ def extract_keywords(self, sentence, span_info=False):
                     
     # and many more lines ... (89 lines in total)
 ```
-We would have [this](https://github.com/shner-elmo/FlashText2.0/blob/master/flashtext2/keyword_processor.py#L54#L81):
+We would have [this](https://github.com/shner-elmo/FlashText2.0/blob/master/flashtext2/keyword_processor.py#L53#L99):
 ```py
-def extract_keywords_iter(self, sentence: str) -> Iterator[tuple[str, int, int]]:
+def _extract_keywords_iter(self, sentence: str) -> Iterator[str]:
     if not self._case_sensitive:
         sentence = sentence.lower()
 
     words: list[str] = self.split_sentence(sentence) + ['']
-    lst_len: list[int] = list(map(len, words))  # cache the len() of each word
+    n_words = len(words)
     keyword = self.keyword
     trie = self.trie_dict
     node = trie
 
     last_kw_found: str | None = None
-    last_kw_found_idx: tuple[int, int] | None = None
-    last_start_span: tuple[int, int] | None = None
     n_words_covered = 0
     idx = 0
-    while idx < len(words):
+    while idx < n_words:
         word = words[idx]
 
         n_words_covered += 1
@@ -77,20 +75,9 @@ def extract_keywords_iter(self, sentence: str) -> Iterator[tuple[str, int, int]]
             kw = node.get(keyword)
             if kw:
                 last_kw_found = kw
-                last_kw_found_idx = (idx, n_words_covered)
         else:
             if last_kw_found is not None:
-                kw_end_idx, kw_n_covered = last_kw_found_idx
-                start_span_idx = kw_end_idx - kw_n_covered + 1
-
-                if last_start_span is None:
-                    start_span = sum(lst_len[:start_span_idx])
-                else:
-                    start_span = last_start_span[1] + sum(lst_len[last_start_span[0]:start_span_idx])
-                last_start_span = start_span_idx, start_span  # cache the len() for the given slice for next time
-
-                yield last_kw_found, start_span, start_span + sum(
-                    lst_len[start_span_idx:start_span_idx + kw_n_covered])
+                yield last_kw_found
                 last_kw_found = None
                 idx -= 1
             else:
@@ -98,6 +85,7 @@ def extract_keywords_iter(self, sentence: str) -> Iterator[tuple[str, int, int]]
             node = trie
             n_words_covered = 0
         idx += 1
+    idx += 1
 ```
 Much more readable, right?  
 Also, other than rewriting all the functions with simpler, shorter, and more intuitive code,
@@ -192,7 +180,12 @@ and to [decorator-factory](https://github.com/decorator-factory) for optimizing 
 
 #### What's next
 
-* Optimized the extract_keywords() algorithm
+Stay tuned! In the future version I will implement the whole algorithm in Rust, which other than being as fast as C,
+it consumes very little memory usage even on very large strings, and it makes it easy to parallelize code to take 
+advantage of all cores.
+
+* Optimize the extract_keywords() algorithm
 * Experiment with Cython to speed up everything
 * Add a selection algorithms for extracting different things (words, substrings, sentences, etc.) 
 * Improve tests
+* Experiment with `multiprocessing` to improve performance on very large strings
