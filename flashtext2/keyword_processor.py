@@ -47,10 +47,59 @@ class KeywordProcessor(TrieDict):
         :return: list of strings or list of tuples
         """
         if span_info:
-            return list(self.extract_keywords_iter(sentence))
-        return [tup[0] for tup in self.extract_keywords_iter(sentence)]
+            return list(self._extract_keywords_with_span_iter(sentence=sentence))
+        return list(self._extract_keywords_iter(sentence=sentence))
 
-    def extract_keywords_iter(self, sentence: str) -> Iterator[tuple[str, int, int]]:
+    def _extract_keywords_iter(self, sentence: str) -> Iterator[str]:
+        """
+        Get a generator that yields the keywords
+
+        Examples:
+
+        >>> from flashtext2 import KeywordProcessor
+        >>> kp = KeywordProcessor()
+        >>> kp.add_keywords_from_dict({'py': 'Python', 'go': 'Golang', 'hello': 'Hey'})
+        >>> my_str = 'Hello, I love learning Py, aka: Python, and I plan to learn about Go as well.'
+        >>> list(kp._extract_keywords_iter(my_str))
+        ['Hey', 'Python', 'Golang']
+
+        :param sentence: str
+        :return: Generator
+        """
+        if not self._case_sensitive:
+            sentence = sentence.lower()
+
+        words: list[str] = self.split_sentence(sentence) + ['']
+        n_words = len(words)
+        keyword = self.keyword
+        trie = self.trie_dict
+        node = trie
+
+        last_kw_found: str | None = None
+        n_words_covered = 0
+        idx = 0
+        while idx < n_words:
+            word = words[idx]
+
+            n_words_covered += 1
+            node = node.get(word)
+            if node:
+                kw = node.get(keyword)
+                if kw:
+                    last_kw_found = kw
+            else:
+                if last_kw_found is not None:
+                    yield last_kw_found
+                    last_kw_found = None
+                    idx -= 1
+                else:
+                    idx -= n_words_covered - 1
+                node = trie
+                n_words_covered = 0
+            idx += 1
+
+    # TODO: deduplicate the code between these two functions
+    def _extract_keywords_with_span_iter(self, sentence: str) -> Iterator[tuple[str, int, int]]:
         """
         Get a generator that yields the keywords and their start/end position as a tuple (keyword, start_idx, end_idx)
 
@@ -60,7 +109,7 @@ class KeywordProcessor(TrieDict):
         >>> kp = KeywordProcessor()
         >>> kp.add_keywords_from_dict({'py': 'Python', 'go': 'Golang', 'hello': 'Hey'})
         >>> my_str = 'Hello, I love learning Py, aka: Python, and I plan to learn about Go as well.'
-        >>> list(kp.extract_keywords_iter(my_str))
+        >>> list(kp._extract_keywords_with_span_iter(my_str))
         [('Hey', 0, 5), ('Python', 23, 25), ('Golang', 66, 68)]
 
         :param sentence: str
@@ -70,6 +119,7 @@ class KeywordProcessor(TrieDict):
             sentence = sentence.lower()
 
         words: list[str] = self.split_sentence(sentence) + ['']
+        n_words = len(words)
         lst_len: list[int] = list(map(len, words))  # cache the len() of each word
         keyword = self.keyword
         trie = self.trie_dict
@@ -80,7 +130,7 @@ class KeywordProcessor(TrieDict):
         last_start_span: tuple[int, int] | None = None
         n_words_covered = 0
         idx = 0
-        while idx < len(words):
+        while idx < n_words:
             word = words[idx]
 
             n_words_covered += 1
@@ -129,7 +179,7 @@ class KeywordProcessor(TrieDict):
         """
         s = ''
         prev_end = 0
-        for kw, start, end in self.extract_keywords_iter(sentence):
+        for kw, start, end in self._extract_keywords_with_span_iter(sentence=sentence):
             s += sentence[prev_end:start] + kw
             prev_end = end
         # after replacing all the keywords we need to get the text between the last keyword and the end of the sentence
