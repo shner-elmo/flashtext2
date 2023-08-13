@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import io
 import itertools
 from typing import Iterator, Literal, overload
 
@@ -175,11 +176,12 @@ class KeywordProcessor(TrieDict):
         :param sentence: str
         :return: new sentence with the words replaced
         """
-        # TODO: use IoString instead
-        s = ''
+        s = io.StringIO()
         prev_end = 0
         for kw, start, end in self._extract_keywords_with_span_iter(sentence=sentence):
-            s += sentence[prev_end:start] + kw
+            s.write(sentence[prev_end:start] + kw)
             prev_end = end
+
         # after replacing all the keywords we need to get the text between the last keyword and the end of the sentence
-        return s + sentence[prev_end:]
+        s.write(sentence[prev_end:])
+        return s.getvalue()
