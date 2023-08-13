@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-from typing import Generator, Any, TypeVar
-
-
 __all__ = [
     'yield_nested_dict_items',
     'convert_trie_to_dict',
 ]
+
+from typing import Generator, Any, TypeVar
 
 T = TypeVar('T')
 

@@ -1,14 +1,13 @@
 from __future__ import annotations
 
-import string
-import random
-
-
 __all__ = [
     'pretty_print',
     'get_word',
     'all_words',
 ]
+
+import string
+import random
 
 
 def pretty_print(*args, sep: str = '\t', ljust: int = 10) -> None:
