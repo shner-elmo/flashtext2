@@ -1,18 +1,23 @@
 from __future__ import annotations
 
+import time
+import random
+import itertools
+from typing import TYPE_CHECKING, Iterator
+
 import flashtext
 import flashtext2
 import pandas as pd
 
-import time
-import random
+from utils import all_words
 
-from utils import all_words  # , pretty_print
+N_TESTS = 5
 
 
-def test() -> list[tuple]:
-    lst = []
-    for i in range(0, 20001, 1000):
+def benchmark() -> Iterator[dict[str, ...]]:
+    for i in range(0, 100001, 1000):
+        data = {'count': i}
+
         words = random.sample(all_words, 10_000)
         sentence = ' '.join(words)  # len(story) == 10,000 * 6 = 60,000 chars
         keywords = random.sample(all_words, i)
@@ -23,15 +28,16 @@ def test() -> list[tuple]:
 
         start = time.perf_counter()
         out1 = kp.replace_keywords(sentence)
-        time1 = time.perf_counter() - start
+        data['flashtext'] = time.perf_counter() - start
         del kp  # use only flashtext 2.0 for the next tests
 
-        kp = flashtext2.KeywordProcessor()
-        kp.add_keywords_from_list(keywords)
+        kp2 = flashtext2.KeywordProcessor()
+        kp2.add_keywords_from_list(keywords)
 
         start = time.perf_counter()
-        out2 = kp.replace_keywords(sentence)
-        time2 = time.perf_counter() - start
+        out2 = kp2.replace_keywords(sentence)
+        data['flashtext2'] = time.perf_counter() - start
+        del kp2
         # ---------------------------------------------------------------------------------------------------
 
         # to make sure we exhausted the generators if the output is a list
@@ -40,36 +46,29 @@ def test() -> list[tuple]:
         assert len(out1) == len(out2), ('Length:', len(out1), len(out2))
         assert out1 == out2
 
-        # you can uncomment this if you want copy and paste the output in gsheets or excel
-        # pretty_print(i, time1, time2)
-        lst.append((i, time1, time2))
-    return lst
+        yield data
 
 
 def main():
-    def mean(it) -> float:
-        return sum(it) / len(it)
+    data = itertools.chain(*(benchmark() for _ in range(N_TESTS)))
 
-    cols = [list(zip(*test())) for _ in range(5)]
-    n_cols = len(cols[0])
+    df = pd.DataFrame(data=data)
+    avg_df = df.groupby('count').mean()  # this is necessary if N_TESTS > 1
+    assert len(avg_df) == len(df) // N_TESTS
 
-    new_cols = [[] for _ in range(n_cols)]
-    for x in range(5):
-        for i in range(n_cols):
-            # print([cols[x][i]])
-            new_cols[i].append(cols[x][i])
-
-    # get the average of each column
-    new_cols = [list(map(mean, zip(*col_grp))) for col_grp in new_cols]
-
-    count, time1, time2 = new_cols
-    df = pd.DataFrame({
-        'count': count,
-        'flashtext': time1,
-        'flashtext 2.0': time2,
-    })
-    plt = df.plot.line(title='Time For Replacing Keywords', x='count', xlabel='Word Count',
-                       ylabel='Seconds', y=['flashtext', 'flashtext 2.0'], grid=True)
+    name_color_map = {
+        'flashtext (with span-info)': '#1f77b4',
+        'flashtext': '#17becf',
+        'flashtext2 (with span-info)': '#ff7f0e',
+        'flashtext2': '#d62728',
+    }
+    plt = avg_df.plot.line(
+        title='Time For Replacing Keywords',
+        xlabel='Word Count',
+        ylabel='Seconds',
+        color=[name_color_map[col] for col in avg_df.columns],
+        grid=True,
+    )
     plt.figure.savefig('replace-keywords.png')
 
 
