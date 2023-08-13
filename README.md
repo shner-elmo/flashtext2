@@ -51,13 +51,13 @@ def extract_keywords(self, sentence, span_info=False):
                     
     # and many more lines ... (89 lines in total)
 ```
-We would have [this](https://github.com/shner-elmo/FlashText2.0/blob/master/flashtext2/keyword_processor.py#L53#L99):
+We would have [this](https://github.com/shner-elmo/flashtext2/blob/master/flashtext2/keyword_processor.py#L55-L101):
 ```py
 def _extract_keywords_iter(self, sentence: str) -> Iterator[str]:
     if not self._case_sensitive:
         sentence = sentence.lower()
 
-    words: list[str] = self.split_sentence(sentence) + ['']
+    words: list[str] = list(itertools.chain(self.split_sentence(sentence), ('',)))
     n_words = len(words)
     keyword = self.keyword
     trie = self.trie_dict
@@ -85,10 +85,11 @@ def _extract_keywords_iter(self, sentence: str) -> Iterator[str]:
             node = trie
             n_words_covered = 0
         idx += 1
-    idx += 1
 ```
-Much more readable, right?  
-Also, other than rewriting all the functions with simpler, shorter, and more intuitive code,
+Much more readable, right?
+Not only is this more readable and concise, it is also more performant (and consistent), more about that later.
+
+Other than rewriting all the functions with simpler, shorter, and more intuitive code,
 all the methods and functions are fully typed.
 
 ## Performance
