@@ -15,8 +15,9 @@ class TrieDict:
         self._trie_dict = {}
         self._keywords_dict: dict[str, str] = {}  # dict[word, clean_word]
 
+    # TODO: make sure that there are no issues converting this to an iterator instead
     @staticmethod
-    def split_sentence(sentence: str) -> list[str]:
+    def split_sentence(sentence: str) -> Iterator[str]:
         """
         Return an iterable that yields parts of the sentence (words, characters, or a mix of both ...)
 
@@ -24,7 +25,7 @@ class TrieDict:
         components from a string, it's best to have all this code in one place.
         """
         # TODO add self.split_sentence_iter() to take advantage of splitters that are generators
-        return list(filter(None, re.split(r'([^a-zA-Z\d])', sentence)))  # remove all the empty strings
+        return filter(None, re.split(r'([^a-zA-Z\d])', sentence))  # remove all the empty strings
 
     @property
     def trie_dict(self) -> dict:
@@ -119,7 +120,7 @@ class TrieDict:
             else:
                 # remove all the nodes between the last node that had multiple children and the last letter of our word
                 last_multi_node = list(self._node_iterator(word=word))[last_multi_node_idx]
-                first_token_to_remove = self.split_sentence(sentence=word)[last_multi_node_idx + 1]
+                first_token_to_remove = list(self.split_sentence(sentence=word))[last_multi_node_idx + 1]
                 del last_multi_node[first_token_to_remove]
 
         del self._keywords_dict[word]

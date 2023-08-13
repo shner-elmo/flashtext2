@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import itertools
 from typing import Iterator, Literal, overload
 
 from .trie_dict import TrieDict
@@ -69,7 +70,7 @@ class KeywordProcessor(TrieDict):
         if not self._case_sensitive:
             sentence = sentence.lower()
 
-        words: list[str] = self.split_sentence(sentence) + ['']
+        words: list[str] = list(itertools.chain(self.split_sentence(sentence), ('',)))
         n_words = len(words)
         keyword = self.keyword
         trie = self.trie_dict
@@ -118,16 +119,20 @@ class KeywordProcessor(TrieDict):
         if not self._case_sensitive:
             sentence = sentence.lower()
 
-        words: list[str] = self.split_sentence(sentence) + ['']
+        # the first empty string is for when the first word/s are a keyword, and we want to
+        # get the index of the previous keyword.
+        # and the last emtpy string if running the `while` loop an extra iteration
+        words: list[str] = list(
+            itertools.chain(('',), self.split_sentence(sentence), ('',))
+        )
         n_words = len(words)
-        lst_len: list[int] = list(map(len, words))  # cache the len() of each word
+        # cache the len() of each word (and the sum of all previous words)
+        lst_len: list[int] = list(itertools.accumulate(map(len, words)))
         keyword = self.keyword
         trie = self.trie_dict
         node = trie
 
         last_kw_found: str | None = None
-        last_kw_found_idx: tuple[int, int] | None = None
-        last_start_span: tuple[int, int] | None = None
         n_words_covered = 0
         idx = 0
         while idx < n_words:
@@ -139,20 +144,13 @@ class KeywordProcessor(TrieDict):
                 kw = node.get(keyword)
                 if kw:
                     last_kw_found = kw
-                    last_kw_found_idx = (idx, n_words_covered)
+                    last_kw_found_start_idx = idx - n_words_covered
+                    last_kw_found_end_idx = idx
             else:
                 if last_kw_found is not None:
-                    kw_end_idx, kw_n_covered = last_kw_found_idx
-                    start_span_idx = kw_end_idx - kw_n_covered + 1
-
-                    if last_start_span is None:
-                        start_span = sum(lst_len[:start_span_idx])
-                    else:
-                        start_span = last_start_span[1] + sum(lst_len[last_start_span[0]:start_span_idx])
-                    last_start_span = start_span_idx, start_span  # cache the len() for the given slice for next time
-
-                    yield last_kw_found, start_span, start_span + sum(
-                        lst_len[start_span_idx:start_span_idx + kw_n_covered])
+                    # noinspection PyUnboundLocalVariable
+                    yield last_kw_found, lst_len[last_kw_found_start_idx], lst_len[
+                        last_kw_found_end_idx]
                     last_kw_found = None
                     idx -= 1
                 else:
@@ -177,6 +175,7 @@ class KeywordProcessor(TrieDict):
         :param sentence: str
         :return: new sentence with the words replaced
         """
+        # TODO: use IoString instead
         s = ''
         prev_end = 0
         for kw, start, end in self._extract_keywords_with_span_iter(sentence=sentence):
