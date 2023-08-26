@@ -5,6 +5,7 @@ __pycache__/
 debug_env.py
 keywords.txt
 notes.txt
+trash
 
 benchmarks/extract-keywords (*).png
 benchmarks/benchmark_sentence_split.py
