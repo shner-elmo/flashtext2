@@ -5,8 +5,8 @@
 ---
 
 [![PyPi](https://img.shields.io/badge/PyPi-0.1.0-yellow)](https://pypi.org/project/flashtext2/)
-[![Downloads](https://pepy.tech/badge/flashtext2)](https://pepy.tech/project/flashtext2)
-[![Downloads](https://pepy.tech/badge/flashtext2/month)](https://pepy.tech/project/flashtext2)
+[![Downloads](https://static.pepy.tech/badge/flashtext2)](https://pepy.tech/project/flashtext2)
+[![Downloads](https://static.pepy.tech/badge/flashtext2/month)](https://pepy.tech/project/flashtext2)
 
 You can get the package directly from [PyPI](https://pypi.org/project/flashtext2/)
 ```
