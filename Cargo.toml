@@ -1,0 +1,27 @@
+[package]
+name = "flashtext2_pyo3"  # is this name used anywhere?
+version = "0.0.1"
+authors = ["Shneor E."]
+edition = "2021"
+license = "MIT"
+description = "The FlashText algorithm implemented in Rust"
+homepage = "https://github.com/shner-elmo/flashtext2-rs"
+documentation = "https://github.com/shner-elmo/flashtext2-rs/blob/master/README.md"
+repository = "https://github.com/shner-elmo/flashtext2-rs"
+readme = "README.md"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+name = "flashtext2"  # for now we are gonna implement that module in Rust
+# "cdylib" is necessary to produce a shared library for Python to import from.
+crate-type = ["cdylib"]
+
+[dependencies]
+flashtext2_rs = { package = "flashtext2", version = "0.0.3" }
+regex = "1.9.6"
+
+[dependencies.pyo3]
+version = "0.19.2"
+# "abi3-py38" tells pyo3 (and maturin) to build using the stable ABI with minimum Python version 3.8
+features = ["abi3-py38"]
