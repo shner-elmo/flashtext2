@@ -66,12 +66,9 @@ impl KeywordProcessor {
     // TODO: make this a lazy-iterator
     pub fn extract_keywords(&self, text: &str) -> Vec<&String> {
         self.kp.extract_keywords(text)
-            .into_iter()
-            .map(|(kw, _, _)| kw)
-            .collect()
     }
 
-    pub fn extract_keywords_with_span(&self, text: &str) -> Vec<(&String, usize, usize)> {
+    pub fn extract_keywords_with_span(&self, text: &str) -> Vec<(String, usize, usize)> {
         self.kp.extract_keywords_with_span(text)
     }
 

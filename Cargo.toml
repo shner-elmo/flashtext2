@@ -18,8 +18,11 @@ name = "flashtext2"  # for now we are gonna implement that module in Rust
 crate-type = ["cdylib"]
 
 [dependencies]
+criterion = "0.5.1"
 flashtext2_rs = { package = "flashtext2", version = "0.0.3" }
 regex = "1.9.6"
+regex-automata = "0.4.3"
+unicode-segmentation = "1.10.1"
 
 [dependencies.pyo3]
 version = "0.19.2"
