@@ -68,7 +68,7 @@ impl KeywordProcessor {
         self.kp.extract_keywords(text)
     }
 
-    pub fn extract_keywords_with_span(&self, text: &str) -> Vec<(String, usize, usize)> {
+    pub fn extract_keywords_with_span(&self, text: &str) -> Vec<(&String, usize, usize)> {
         self.kp.extract_keywords_with_span(text)
     }
 

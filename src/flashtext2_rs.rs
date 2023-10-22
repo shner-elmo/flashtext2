@@ -8,7 +8,7 @@ use std::collections::{HashSet, HashMap};
 //     HashSet::from_iter("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_".chars())
 // );
 
-pub type KeywordSpan = (String, usize, usize);
+// pub type KeywordSpan<'a> = (&'a String, usize, usize);
 
 
 #[derive(PartialEq, Debug, Default)]
@@ -158,7 +158,7 @@ impl KeywordProcessor {
         keywords_found
     }
 
-    pub fn extract_keywords_with_span(&self, text: &str) -> Vec<KeywordSpan> {
+    pub fn extract_keywords_with_span(&self, text: &str) -> Vec<(&String, usize, usize)> {
         let text = {
             if !self.case_sensitive {
                 text.to_lowercase()
@@ -209,7 +209,7 @@ impl KeywordProcessor {
                 if last_keyword_found.is_some() {
                     // TODO: address the spikes in the benchmark that occur when saving the span-info
                     keywords_found.push((
-                        last_keyword_found.unwrap().clone(),
+                        last_keyword_found.unwrap(),
                         last_kw_found_start_idx,
                         last_kw_found_end_idx,
                     ));
@@ -228,7 +228,7 @@ impl KeywordProcessor {
         // check if there is a token that we haven't returned
         if last_keyword_found.is_some() {
             keywords_found.push((
-                last_keyword_found.unwrap().clone(),
+                last_keyword_found.unwrap(),
                 last_kw_found_start_idx,
                 last_kw_found_end_idx,
             ));
