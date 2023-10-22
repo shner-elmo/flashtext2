@@ -67,7 +67,7 @@ def benchmark() -> Iterator[dict[str, ...]]:
             assert isinstance(x, list), 'Iterator is not exhausted.'
 
         # compare span_info True with True, and False with False.
-        # assert output[0] == output[2], f'{output}'
+        assert output[0] == output[2], (output[0], output[2])
         assert output[1] == output[3], (output[1], output[3])
 
         yield data
@@ -76,6 +76,8 @@ def benchmark() -> Iterator[dict[str, ...]]:
 def main():
     name = sys.argv[1]
     print(f'Benchmark name: {name!r}')
+    assert '/' not in name  # then it will consider everything before it a directory name
+
     data = itertools.chain(*(benchmark() for _ in range(N_TESTS)))
 
     df = pd.DataFrame(data=data)
@@ -96,7 +98,7 @@ def main():
         color=[name_color_map[col] for col in avg_df.columns],
         grid=True,
     )
-    plt.figure.savefig('extract-keywords.png')
+    plt.figure.savefig(f'extract-keywords-{name}.png')
 
 
 if __name__ == '__main__':

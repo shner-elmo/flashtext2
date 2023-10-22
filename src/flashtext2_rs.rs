@@ -27,7 +27,10 @@ pub struct KeywordProcessor {
 }
 
 impl KeywordProcessor {
-    // TODO: use the builder pattern for configuring `case_sensitive` and `non_word_boundaries`
+    // TODO: use the builder pattern for configuring:
+    //  - `case_sensitive`
+    //  - `non_word_boundaries`
+    //  - `split_text_func`
     pub fn new(case_sensitive: bool) -> Self {
         Self {
             trie: Node::default(),
@@ -47,18 +50,22 @@ impl KeywordProcessor {
         }
     }
 
+    #[inline]
     pub fn non_word_boundaries(&self) -> HashSet<char> {
         self.non_word_boundaries.clone()
     }
 
+    #[inline]
     pub fn case_sensitive(&self) -> bool {
         self.case_sensitive
     }
 
+    #[inline]
     pub fn len(&self) -> usize {
         self.len
     }
 
+    #[inline]
     pub fn is_empty(&self) -> bool {
         // or `self.trie.children.is_empty()`
         self.len == 0
@@ -69,6 +76,7 @@ impl KeywordProcessor {
     //     &self.trie
     // }
 
+    #[inline]
     pub fn add_keyword(&mut self, word: &str, clean_word: &str) {
         let normalized_word = {
             if !self.case_sensitive {
@@ -80,8 +88,9 @@ impl KeywordProcessor {
 
         let mut trie = &mut self.trie;
 
-        for word in split_text(&normalized_word, &self.non_word_boundaries) {
-            trie = trie.children.entry(word).or_default();
+        for word in normalized_word.split_word_bounds() {
+            // TODO: remove `.to_string()`
+            trie = trie.children.entry(word.to_string()).or_default();
         };
 
         // increment `len` only if the keyword isn't already there
@@ -108,18 +117,17 @@ impl KeywordProcessor {
             }
         };
 
-        let mut words = split_text(&text, &self.non_word_boundaries);
-        words.push("".to_string());
+        let mut words = &text.split_word_bound_indices().collect::<Vec<(usize, &str)>>();
+        // words.push("".to_string());
         let mut keywords_found = vec![];
         let mut node = &self.trie;
 
         let mut idx = 0;
         let mut n_words_covered = 0;
-        let mut word;
         let mut last_keyword_found = None;
 
         while idx < words.len() {
-            word = &words[idx];
+            let (_, word) = words[idx];
             n_words_covered += 1;
 
             let children = node.children.get(word);
@@ -129,6 +137,7 @@ impl KeywordProcessor {
                     last_keyword_found = Some(node.clean_word.as_ref().unwrap());
                 }
             } else {
+                // TODO: use `if let Some(val)`
                 if last_keyword_found.is_some() {
                     keywords_found.push(last_keyword_found.unwrap());
                     last_keyword_found = None;
@@ -141,6 +150,11 @@ impl KeywordProcessor {
             }
             idx += 1;
         }
+
+        if last_keyword_found.is_some() {
+            keywords_found.push(last_keyword_found.unwrap());
+        }
+
         keywords_found
     }
 
@@ -153,45 +167,51 @@ impl KeywordProcessor {
             }
         };
 
-        let mut words = split_text(&text, &self.non_word_boundaries);
-        words.insert(0, "".to_string());
-        words.push("".to_string());
+        let mut words = &text.split_word_bound_indices().collect::<Vec<(usize, &str)>>();
 
-        let mut lst_len = Vec::with_capacity(words.len());
-        let mut sum = 0;
-        for word in &words {
-            sum += word.len();
-            lst_len.push(sum);
-        }
+        // TODO: test if the extra first/last iteration is needed
+        // words.insert(0, "".to_string());
+        // words.push("".to_string());
+
+        // let mut lst_len = Vec::with_capacity(words.len());
+        // let mut sum = 0;
+        // for word in &words {
+        //     sum += word.len();
+        //     lst_len.push(sum);
+        // }
 
         let mut keywords_found = vec![];
         let mut node = &self.trie;
 
         let mut idx = 0;
         let mut n_words_covered = 0;
-        let mut word;
         let mut last_keyword_found = None;
         let mut last_kw_found_start_idx = 0;  // default value that will always be overwritten;
         let mut last_kw_found_end_idx = 0;  // default value that will always be overwritten;
 
         while idx < words.len() {
-            word = &words[idx];
+            let (start_idx, word) = words[idx];
             n_words_covered += 1;
+
+            if n_words_covered == 1 {
+                last_kw_found_start_idx = start_idx;
+            }
 
             let children = node.children.get(word);
             if children.is_some() {
                 node = children.unwrap();
                 if node.clean_word.is_some() {
                     last_keyword_found = Some(node.clean_word.as_ref().unwrap());
-                    last_kw_found_start_idx = idx - n_words_covered;
-                    last_kw_found_end_idx = idx;
+                    // last_kw_found_start_idx = start_idx;
+                    last_kw_found_end_idx = start_idx + word.len();
                 }
             } else {
                 if last_keyword_found.is_some() {
+                    // TODO: address the spikes in the benchmark that occur when saving the span-info
                     keywords_found.push((
                         last_keyword_found.unwrap().clone(),
-                        lst_len[last_kw_found_start_idx],
-                        lst_len[last_kw_found_end_idx],
+                        last_kw_found_start_idx,
+                        last_kw_found_end_idx,
                     ));
 
                     last_keyword_found = None;
@@ -204,10 +224,22 @@ impl KeywordProcessor {
             }
             idx += 1;
         }
+
+        // check if there is a token that we haven't returned
+        if last_keyword_found.is_some() {
+            keywords_found.push((
+                last_keyword_found.unwrap().clone(),
+                last_kw_found_start_idx,
+                last_kw_found_end_idx,
+            ));
+        }
+
         keywords_found
     }
 
     pub fn replace_keywords(&self, text: &str) -> String {
+        // the actual string returned can be bigger or smaller than `text.len()`,
+        // however it will be similar, depends on the difference of: `word.len() - clean_word.len()`
         let mut string = String::with_capacity(text.len());
         let mut prev_end = 0;
         for (keyword, start, end) in self.extract_keywords_with_span(text) {
@@ -278,32 +310,34 @@ fn split_text_idx(text: &str, non_word_boundaries: &HashSet<char>) -> Vec<(usize
 }
 
 // TODO: benchmark this function Vs Regex(r'([^a-zA-Z\d])')
-fn split_text(text: &str, non_word_boundaries: &HashSet<char>) -> Vec<String> {
-    text.split_word_bounds().map(|str| str.to_string()).collect()
-}
 
-// old source code:
-fn split_text_v2(text: &str, non_word_boundaries: &HashSet<char>) -> Vec<String> {
-    let mut vec = vec![];
-    let mut word = String::new();
-    for ch in text.chars() {
-        if non_word_boundaries.contains(&ch) {
-            word.push(ch);
-        } else {
-            if !word.is_empty() {
-                vec.push(word.clone());
-                word.clear();
-            }
-            vec.push(ch.to_string());
-        }
-    }
-
-    // check if there is a word that we haven't added yet
-    if !word.is_empty() {
-        vec.push(word.clone());
-    }
-    vec
-}
+// #[inline]
+// fn split_text(text: &str) -> Vec<(usize, &str)> {
+//     text.split_word_bound_indices().collect()
+// }
+//
+// // old source code:
+// fn split_text_v2(text: &str, non_word_boundaries: &HashSet<char>) -> Vec<String> {
+//     let mut vec = vec![];
+//     let mut word = String::new();
+//     for ch in text.chars() {
+//         if non_word_boundaries.contains(&ch) {
+//             word.push(ch);
+//         } else {
+//             if !word.is_empty() {
+//                 vec.push(word.clone());
+//                 word.clear();
+//             }
+//             vec.push(ch.to_string());
+//         }
+//     }
+//
+//     // check if there is a word that we haven't added yet
+//     if !word.is_empty() {
+//         vec.push(word.clone());
+//     }
+//     vec
+// }
 
 
 #[cfg(test)]
@@ -356,28 +390,28 @@ mod tests {
         assert_eq!(kp, KeywordProcessor::default());
     }
 
-    #[test]
-    fn test_split_text() {
-        let non_word_boundaries = KeywordProcessor::new(false).non_word_boundaries;
-
-        // empty string shouldn't return anything
-        assert!(split_text("", &non_word_boundaries).is_empty());
-
-        let cases = [
-            ("Hello", vec!["Hello"]),
-            ("Hello ", vec!["Hello", " "]),
-            ("Hello World", vec!["Hello", " ", "World"]),
-            (" Hello World ", vec![" ", "Hello", " ", "World", " "]),
-            ("Hannibal was born in 247 BC, death date; unknown.", vec!["Hannibal", " ", "was", " ", "born", " ", "in", " ", "247", " ", "BC", ",",  " ", "death", " ", "date", ";", " ", "unknown", "."]),
-            // ("!!'fesf'esfes 32!!..", vec!["!", "!", "'", "fesf", "'", "esfes", " ", "32", "!", "!", ".", "."]),
-            ("!!'fesf'esfes 32!!..", vec!["!", "!", "'", "fesf'esfes", " ", "32", "!", "!", ".", "."]),
-            // ("   py  .  ", vec![" ", " ", " ", "py", " ", " ", ".", " ", " "]),
-            ("   py  .  ", vec!["   ", "py", "  ", ".", "  "]),
-        ];
-        for (string, vec) in cases {
-            assert_eq!(split_text(string, &non_word_boundaries), vec);
-        }
-    }
+    // #[test]
+    // fn test_split_text() {
+    //     let non_word_boundaries = KeywordProcessor::new(false).non_word_boundaries;
+    //
+    //     // empty string shouldn't return anything
+    //     assert!(split_text("", &non_word_boundaries).is_empty());
+    //
+    //     let cases = [
+    //         ("Hello", vec!["Hello"]),
+    //         ("Hello ", vec!["Hello", " "]),
+    //         ("Hello World", vec!["Hello", " ", "World"]),
+    //         (" Hello World ", vec![" ", "Hello", " ", "World", " "]),
+    //         ("Hannibal was born in 247 BC, death date; unknown.", vec!["Hannibal", " ", "was", " ", "born", " ", "in", " ", "247", " ", "BC", ",",  " ", "death", " ", "date", ";", " ", "unknown", "."]),
+    //         // ("!!'fesf'esfes 32!!..", vec!["!", "!", "'", "fesf", "'", "esfes", " ", "32", "!", "!", ".", "."]),
+    //         ("!!'fesf'esfes 32!!..", vec!["!", "!", "'", "fesf'esfes", " ", "32", "!", "!", ".", "."]),
+    //         // ("   py  .  ", vec![" ", " ", " ", "py", " ", " ", ".", " ", " "]),
+    //         ("   py  .  ", vec!["   ", "py", "  ", ".", "  "]),
+    //     ];
+    //     for (string, vec) in cases {
+    //         assert_eq!(split_text(string, &non_word_boundaries), vec);
+    //     }
+    // }
 
     #[test]
     fn test_len() {
@@ -519,6 +553,31 @@ mod tests {
             ]),
         };
         assert_eq!(kp.trie, trie);
+    }
+
+    // #[test]
+    // fn extract_keywords() {
+    //     let arr = &[
+    //         ("Hello", vec!["hello"]),
+    //         ("Hello world", vec!["hello world"]),
+    //         ("Hello world", vec!["hello world"]),
+    //     ];
+    //     for (string, expected_keywords) in arr.into_iter() {
+    //         let mut kp = KeywordProcessor::new(false);
+    //         kp.add_keyword(string, string);
+    //         assert_eq!(kp.extract_keywords(string), expected_keywords)
+    //
+    //     }
+    // }
+
+    #[test]
+    fn extract_keywords_with_span() {
+
+    }
+
+    #[test]
+    fn replace_keywords() {
+
     }
 }
 
