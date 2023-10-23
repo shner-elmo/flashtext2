@@ -117,7 +117,7 @@ impl KeywordProcessor {
             }
         };
 
-        let mut words = &text.split_word_bound_indices().collect::<Vec<(usize, &str)>>();
+        let mut words: Vec<(usize, &str)> = text.split_word_bound_indices().collect();
         // words.push("".to_string());
         let mut keywords_found = vec![];
         let mut node = &self.trie;
@@ -130,20 +130,22 @@ impl KeywordProcessor {
             let (_, word) = words[idx];
             n_words_covered += 1;
 
-            let children = node.children.get(word);
-            if children.is_some() {
-                node = children.unwrap();
-                if node.clean_word.is_some() {
-                    last_keyword_found = Some(node.clean_word.as_ref().unwrap());
+            if let Some(child) = node.children.get(word) {
+                node = child;
+                if let Some(clean_word) = &node.clean_word {
+                    last_keyword_found = Some(clean_word);
                 }
             } else {
                 // TODO: use `if let Some(val)`
-                if last_keyword_found.is_some() {
-                    keywords_found.push(last_keyword_found.unwrap());
-                    last_keyword_found = None;
-                    idx -= 1;
-                } else {
-                    idx -= n_words_covered - 1;
+                match last_keyword_found {
+                    Some(keyword) => {
+                        keywords_found.push(keyword);
+                        last_keyword_found = None;
+                        idx -= 1;
+                    },
+                    None => {
+                        idx -= n_words_covered - 1;
+                    }
                 }
                 node = &self.trie;
                 n_words_covered = 0;
@@ -151,8 +153,8 @@ impl KeywordProcessor {
             idx += 1;
         }
 
-        if last_keyword_found.is_some() {
-            keywords_found.push(last_keyword_found.unwrap());
+        if let Some(keyword) = last_keyword_found {
+            keywords_found.push(keyword);
         }
 
         keywords_found
@@ -167,18 +169,11 @@ impl KeywordProcessor {
             }
         };
 
-        let mut words = &text.split_word_bound_indices().collect::<Vec<(usize, &str)>>();
+        let mut words: Vec<(usize, &str)> = text.split_word_bound_indices().collect();
 
         // TODO: test if the extra first/last iteration is needed
         // words.insert(0, "".to_string());
         // words.push("".to_string());
-
-        // let mut lst_len = Vec::with_capacity(words.len());
-        // let mut sum = 0;
-        // for word in &words {
-        //     sum += word.len();
-        //     lst_len.push(sum);
-        // }
 
         let mut keywords_found = vec![];
         let mut node = &self.trie;
@@ -193,32 +188,29 @@ impl KeywordProcessor {
             let (start_idx, word) = words[idx];
             n_words_covered += 1;
 
-            if n_words_covered == 1 {
-                last_kw_found_start_idx = start_idx;
-            }
-
-            let children = node.children.get(word);
-            if children.is_some() {
-                node = children.unwrap();
-                if node.clean_word.is_some() {
-                    last_keyword_found = Some(node.clean_word.as_ref().unwrap());
-                    // last_kw_found_start_idx = start_idx;
+            if let Some(child) = node.children.get(word) {
+                node = child;
+                if let Some(clean_word) = &node.clean_word {
+                    last_keyword_found = Some(clean_word);
                     last_kw_found_end_idx = start_idx + word.len();
                 }
             } else {
-                if last_keyword_found.is_some() {
-                    // TODO: address the spikes in the benchmark that occur when saving the span-info
-                    keywords_found.push((
-                        last_keyword_found.unwrap(),
-                        last_kw_found_start_idx,
-                        last_kw_found_end_idx,
-                    ));
-
-                    last_keyword_found = None;
-                    idx -= 1;
-                } else {
-                    idx -= n_words_covered - 1;
+                match last_keyword_found {
+                    Some(keyword) => {
+                        keywords_found.push((
+                            keyword,
+                            last_kw_found_start_idx,
+                            last_kw_found_end_idx,
+                        ));
+                        last_keyword_found = None;
+                        idx -= 1;
+                    },
+                    None => {
+                        idx -= n_words_covered - 1;
+                        last_kw_found_start_idx = idx + 1;
+                    }
                 }
+                // TODO: address the spikes in the benchmark that occur when saving the span-info
                 node = &self.trie;
                 n_words_covered = 0;
             }
@@ -226,9 +218,9 @@ impl KeywordProcessor {
         }
 
         // check if there is a token that we haven't returned
-        if last_keyword_found.is_some() {
+        if let Some(keyword) = last_keyword_found {
             keywords_found.push((
-                last_keyword_found.unwrap(),
+                keyword,
                 last_kw_found_start_idx,
                 last_kw_found_end_idx,
             ));
@@ -247,7 +239,9 @@ impl KeywordProcessor {
             string += &keyword;
             prev_end = end;
         }
-        string += &text[prev_end..];
+        string += &text[prev_end..];  // add the last keyword
+
+        string.shrink_to_fit();  // if `clean_word` is smaller than `word`, then `String::with_capacity` will over-allocate
         string
     }
 }
