@@ -13,6 +13,8 @@ You can get the package directly from [PyPI](https://pypi.org/project/flashtext2
 pip install flashtext2
 ```
 
+Current state of the project:
+I'm currently working on implementing the core in Rust, which will make the benchmarks 3 - 10x faster (Have a look at the `pyo3` branch).
 ---
 
 
