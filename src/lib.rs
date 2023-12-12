@@ -1,39 +1,31 @@
-mod flashtext2_rs;
-
-use std::collections::{HashSet};
+use flashtext2_rs;
 
 #[cfg(not(test))]
 use pyo3::prelude::*;
-
 
 #[cfg(not(test))]
 #[pyclass]
 #[derive(PartialEq, Debug)]
 pub struct KeywordProcessor {
-    kp: flashtext2_rs::KeywordProcessor,  // here we store the actual `engine` as a Rust object
+    inner: flashtext2_rs::KeywordProcessor, // here we store the actual `engine` as a Rust object
+    case_sensitive: bool,                   // ignored for now (TODO use this)
 }
 
 #[cfg(not(test))]
 #[pymethods]
 impl KeywordProcessor {
-
     // TODO: check if `pub` is even necessary with PyO3
     #[new]
-    #[pyo3(signature = (case_sensitive=false, non_word_boundaries=None))]
-    pub fn __new__(case_sensitive: bool, non_word_boundaries: Option<HashSet<char>>) -> Self {
+    #[pyo3(signature = (case_sensitive=false))]
+    pub fn __new__(case_sensitive: bool) -> Self {
         Self {
-            kp: {
-                if let Some(chars) = non_word_boundaries {
-                    flashtext2_rs::KeywordProcessor::with_non_word_boundaries(chars.clone(), case_sensitive)
-                } else {
-                    flashtext2_rs::KeywordProcessor::new(case_sensitive)
-                }
-            },
+            inner: flashtext2_rs::KeywordProcessor::new(),
+            case_sensitive,
         }
     }
 
     pub fn __len__(&self) -> usize {
-        self.kp.len()
+        self.inner.len()
     }
 
     pub fn __repr__(&self) -> String {
@@ -42,41 +34,47 @@ impl KeywordProcessor {
 
     #[getter]
     pub fn case_sensitive(&self) -> bool {
-        self.kp.case_sensitive()  // TODO: add this getter
-    }
-
-    #[getter]
-    pub fn non_word_boundaries(&self) -> HashSet<char> {
-        self.kp.non_word_boundaries()
+        self.case_sensitive
     }
 
     // TODO: benchmark `words: Vec<str>` Vs `words: PyIterator<str>` and see if there is a difference
-    pub fn add_keywords(&mut self, words: Vec<&str>) {
-        for word in words {
-            self.kp.add_keyword(word, word);
+    #[pyo3(signature = (word, clean_word=None))]
+    pub fn add_keyword(&mut self, word: String, clean_word: Option<String>) {
+        match clean_word {
+            Some(clean_word) => self.inner.add_keyword_with_clean_word(word, clean_word),
+            None => self.inner.add_keyword(word),
         }
     }
 
-    pub fn add_keywords_with_clean_word(&mut self, words: Vec<(&str, &str)>) {
-        for (word, clean_word) in words {
-            self.kp.add_keyword(word, clean_word);
+    // TODO: take a python iterator instead of vec
+    pub fn add_keywords_from_iter(&mut self, words: Vec<&str>) {
+        self.inner.add_keywords_from_iter(words);
+    }
+
+    // TODO: take a python iterator instead of vec
+    pub fn add_keywords_with_clean_word_from_iter(&mut self, words: Vec<(&str, &str)>) {
+        self.inner.add_keywords_with_clean_word_from_iter(words);
+    }
+
+    // TODO: return an iterator
+    pub fn extract_keywords<'a>(&'a self, text: &'a str) -> Vec<&str> {
+        self.inner.extract_keywords(text).collect()
+    }
+
+    // TODO: return an iterator
+    pub fn extract_keywords_with_span<'a>(&'a self, text: &'a str) -> Vec<(&str, usize, usize)> {
+        if text.is_ascii() {
+            self.inner.extract_keywords_with_span(text).collect()
+        } else {
+            // TODO: adjust spans by iterating on `text.char_indices().enumerate()`
+            panic!("Not yet implemented for non-ascii strings")
         }
-    }
-
-    // TODO: make this a lazy-iterator
-    pub fn extract_keywords(&self, text: &str) -> Vec<&String> {
-        self.kp.extract_keywords(text)
-    }
-
-    pub fn extract_keywords_with_span(&self, text: &str) -> Vec<(&String, usize, usize)> {
-        self.kp.extract_keywords_with_span(text)
     }
 
     pub fn replace_keywords(&self, text: &str) -> String {
-        self.kp.replace_keywords(text)
+        self.inner.replace_keywords(text)
     }
 }
-
 
 #[cfg(not(test))]
 #[pymodule]
@@ -86,9 +84,9 @@ fn flashtext2(_py: Python, m: &PyModule) -> PyResult<()> {
     Ok(())
 }
 
-
 // compare benchmarks of:
-// 1. let Some(var) = val Vs var.is_some()
 // 2. `split_text() -> Vec<String>` -> `split_text() -> Vec<(i32, i32)>`
 // 3. split_text() {re.split_inclusive(r'([a-z...])')}
 // 4. extract_keywords() -> Vec<String> Vs extract_keywords() -> { LazyExtractor {...} }
+
+// TODO: create .pyi file
