@@ -2,6 +2,7 @@ use flashtext2_rs;
 
 #[cfg(not(test))]
 use pyo3::prelude::*;
+use pyo3::types::{PyIterator, PyString, PyTuple};
 
 #[cfg(not(test))]
 #[pyclass]
@@ -9,6 +10,14 @@ use pyo3::prelude::*;
 pub struct KeywordProcessor {
     inner: flashtext2_rs::KeywordProcessor, // here we store the actual `engine` as a Rust object
     case_sensitive: bool,                   // ignored for now (TODO use this)
+}
+
+fn python_iterable_to_iterator<'a>(maybe_iterable: &'a PyAny) -> &'a PyIterator {
+    maybe_iterable
+        .call_method0("__iter__")
+        .unwrap()
+        .downcast::<PyIterator>()
+        .unwrap()
 }
 
 #[cfg(not(test))]
@@ -37,7 +46,6 @@ impl KeywordProcessor {
         self.case_sensitive
     }
 
-    // TODO: benchmark `words: Vec<str>` Vs `words: PyIterator<str>` and see if there is a difference
     #[pyo3(signature = (word, clean_word=None))]
     pub fn add_keyword(&mut self, word: String, clean_word: Option<String>) {
         match clean_word {
@@ -46,14 +54,22 @@ impl KeywordProcessor {
         }
     }
 
-    // TODO: take a python iterator instead of vec
-    pub fn add_keywords_from_iter(&mut self, words: Vec<&str>) {
-        self.inner.add_keywords_from_iter(words);
+    pub fn add_keywords_from_iter(&mut self, words: &PyAny) {
+        let iter = python_iterable_to_iterator(words)
+            .iter()
+            .unwrap()
+            .map(|py_obj| py_obj.unwrap().extract::<&str>().unwrap());
+
+        self.inner.add_keywords_from_iter(iter);
     }
 
-    // TODO: take a python iterator instead of vec
-    pub fn add_keywords_with_clean_word_from_iter(&mut self, words: Vec<(&str, &str)>) {
-        self.inner.add_keywords_with_clean_word_from_iter(words);
+    pub fn add_keywords_with_clean_word_from_iter(&mut self, words: &PyAny) {
+        let iter = python_iterable_to_iterator(words)
+            .iter()
+            .unwrap()
+            .map(|py_obj| py_obj.unwrap().extract::<(&str, &str)>().unwrap());
+
+        self.inner.add_keywords_with_clean_word_from_iter(iter);
     }
 
     // TODO: return an iterator
@@ -90,3 +106,5 @@ fn flashtext2(_py: Python, m: &PyModule) -> PyResult<()> {
 // 4. extract_keywords() -> Vec<String> Vs extract_keywords() -> { LazyExtractor {...} }
 
 // TODO: create .pyi file
+// TODO: (flashtext-rs) fix lifetimes issues, take string by value instead of reference before cloning
+// TODO: benchmark `words: Vec<str>` Vs `words: PyIterator<str>` and see if there is a difference
