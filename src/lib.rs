@@ -1,4 +1,4 @@
-use flashtext2_rs;
+use flashtext2_rs::KeywordProcessor;
 
 #[cfg(not(test))]
 use pyo3::prelude::*;
@@ -14,20 +14,21 @@ fn python_iterable_to_iterator(maybe_iterable: &PyAny) -> &PyIterator {
 
 #[cfg(not(test))]
 #[pyclass]
+#[pyo3(module = "flashtext2", name = "KeywordProcessor")]
 #[derive(PartialEq, Debug)]
-struct KeywordProcessor {
-    inner: flashtext2_rs::KeywordProcessor, // here we store the actual `engine` as a Rust object
-    case_sensitive: bool,                   // ignored for now (TODO use this)
+struct PyKeywordProcessor {
+    inner: KeywordProcessor, // here we store the actual `engine` as a Rust object
+    case_sensitive: bool,    // ignored for now (TODO use this)
 }
 
 #[cfg(not(test))]
 #[pymethods]
-impl KeywordProcessor {
+impl PyKeywordProcessor {
     #[new]
     #[pyo3(signature = (case_sensitive=false))]
     fn __new__(case_sensitive: bool) -> Self {
         Self {
-            inner: flashtext2_rs::KeywordProcessor::new(),
+            inner: KeywordProcessor::new(),
             case_sensitive,
         }
     }
@@ -83,7 +84,9 @@ impl KeywordProcessor {
         } else {
             let mut vec = vec![];
             let mut it = text.char_indices().enumerate();
-            for (clean_word, mut word_start, mut word_end) in self.inner.extract_keywords_with_span(text) {
+            for (clean_word, mut word_start, mut word_end) in
+                self.inner.extract_keywords_with_span(text)
+            {
                 for (idx, (char_idx, _)) in it.by_ref() {
                     if char_idx == word_start {
                         word_start = idx;
@@ -118,8 +121,7 @@ impl KeywordProcessor {
 #[cfg(not(test))]
 #[pymodule]
 fn flashtext2(_py: Python, m: &PyModule) -> PyResult<()> {
-    // m.add_function(wrap_pyfunction!(extract_keywords, m)?)?;
-    m.add_class::<KeywordProcessor>()?;
+    m.add_class::<PyKeywordProcessor>()?;
     Ok(())
 }
 
