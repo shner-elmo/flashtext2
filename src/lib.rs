@@ -81,8 +81,32 @@ impl KeywordProcessor {
         if text.is_ascii() {
             self.inner.extract_keywords_with_span(text).collect()
         } else {
-            // TODO: adjust spans by iterating on `text.char_indices().enumerate()`
-            panic!("Not yet implemented for non-ascii strings")
+            let mut vec = vec![];
+            let mut it = text.char_indices().enumerate();
+            for (clean_word, mut word_start, mut word_end) in self.inner.extract_keywords_with_span(text) {
+                for (idx, (char_idx, _)) in it.by_ref() {
+                    if char_idx == word_start {
+                        word_start = idx;
+                        break;
+                    }
+                }
+                {
+                    let old_word_end = word_end;
+                    let mut last_idx = 0;
+                    for (idx, (char_idx, _)) in it.by_ref() {
+                        last_idx = idx;
+                        if word_end == char_idx {
+                            word_end = idx;
+                            break;
+                        }
+                    }
+                    if word_end == old_word_end {
+                        word_end = last_idx + 1;
+                    }
+                }
+                vec.push((clean_word, word_start, word_end));
+            }
+            vec
         }
     }
 
@@ -98,11 +122,6 @@ fn flashtext2(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<KeywordProcessor>()?;
     Ok(())
 }
-
-// compare benchmarks of:
-// 2. `split_text() -> Vec<String>` -> `split_text() -> Vec<(i32, i32)>`
-// 3. split_text() {re.split_inclusive(r'([a-z...])')}
-// 4. extract_keywords() -> Vec<String> Vs extract_keywords() -> { LazyExtractor {...} }
 
 // TODO: create .pyi file
 // TODO: (flashtext-rs) fix lifetimes issues, take string by value instead of reference before cloning
