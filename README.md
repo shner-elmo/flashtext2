@@ -4,7 +4,7 @@
 
 ---
 
-[![PyPi](https://img.shields.io/badge/PyPi-0.2.0-yellow)](https://pypi.org/project/flashtext2/)
+[![PyPi](https://img.shields.io/badge/PyPi-1.0.0-yellow)](https://pypi.org/project/flashtext2/)
 [![Downloads](https://static.pepy.tech/badge/flashtext2)](https://pepy.tech/project/flashtext2)
 [![Downloads](https://static.pepy.tech/badge/flashtext2/month)](https://pepy.tech/project/flashtext2)
 

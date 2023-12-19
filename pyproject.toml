@@ -5,7 +5,7 @@ build-backend = "maturin"
 [project]
 name = "flashtext2"
 requires-python = ">=3.8"
-version = "0.2.0"
+version = "1.0.0"
 description = "A package for extracting keywords from large text very quickly (much faster than regex and the original flashtext package"
 authors = [
   { name = "Shneor E.", email = "770elmo@gmail.com" },
