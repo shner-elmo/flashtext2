@@ -25,8 +25,11 @@ struct PyKeywordProcessor {
 #[pymethods]
 impl PyKeywordProcessor {
     #[new]
-    #[pyo3(signature = (case_sensitive=false))]
+    // #[pyo3(signature = (case_sensitive=false))]
     fn __new__(case_sensitive: bool) -> Self {
+        if !case_sensitive {
+            panic!("case-insensitive is not currently supported");
+        }
         Self {
             inner: KeywordProcessor::new(),
             case_sensitive,
