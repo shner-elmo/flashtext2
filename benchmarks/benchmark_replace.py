@@ -32,7 +32,7 @@ def benchmark() -> Iterator[dict[str, ...]]:
         del kp  # use only flashtext 2.0 for the next tests
 
         kp2 = flashtext2.KeywordProcessor()
-        kp2.add_keywords_from_list(keywords)
+        kp2.add_keywords(keywords)
 
         start = time.perf_counter()
         out2 = kp2.replace_keywords(sentence)
