@@ -7,6 +7,7 @@ name = "flashtext2"
 requires-python = ">=3.8"
 version = "1.0.0"
 description = "A package for extracting keywords from large text very quickly (much faster than regex and the original flashtext package"
+keywords = ["nlp", "string", "regex", "text-processing", "extracting-keywords", "keyword-extraction", "flashtext", "flashtext2", "rust"]
 authors = [
   { name = "Shneor E.", email = "770elmo@gmail.com" },
 ]
@@ -14,17 +15,31 @@ authors = [
 license = "MIT"
 readme = "README.md"
 classifiers = [
+    #   3 - Alpha
+    #   4 - Beta
+    #   5 - Production/Stable
+    "Development Status :: 4 - Beta",
+    "License :: OSI Approved :: MIT License",
     "Programming Language :: Rust",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: Implementation :: CPython",
     "Programming Language :: Python :: Implementation :: PyPy",
 ]
 dynamic = ["version"]
-#dependencies = [
-#  "httpx",
-#  "gidgethub[httpx]>4.0.0",
-#  "django>2.1; os_name != 'nt'",
-#  "django>2.0; os_name == 'nt'"
-#]
+
+[project.urls]
+homepage = "https://github.com/shner-elmo/flashtext2"
+source = "https://github.com/shner-elmo/flashtext2"
+repository = "https://github.com/shner-elmo/flashtext2"
+documentation = "https://github.com/shner-elmo/flashtext2/blob/master/README.md"
+"Bug Reports" = "https://github.com/shner-elmo/flashtext2/issues"
+
 [project.optional-dependencies]
 test = [
     "coverage>=7.2.1",
