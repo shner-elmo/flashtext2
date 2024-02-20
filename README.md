@@ -164,6 +164,22 @@ kp.extract_keywords(my_str)
 ['Hey', 'Python', 'Golang']
 ```
 
+### Extracting Keywords but with Span
+
+```py
+from flashtext2 import KeywordProcessor
+
+kp = KeywordProcessor(case_sensitive=True)
+text = "The Teloschistaceae are a large family of mostly lichen-forming fungi belonging to the class Lecanoromycetes in the division Ascomycota."
+kp.add_keyword("Teloschistaceae", "**Teloschistaceae**")
+kp.add_keyword("Lecanoromycetes")
+ekw_list = kp.extract_keywords_with_span(text)
+print(ekw_list) 
+```
+```
+[('**Teloschistaceae**', 4, 19), ('Lecanoromycetes', 93, 108)]
+```
+
 
 ### Replace Keywords
 
