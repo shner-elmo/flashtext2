@@ -8,10 +8,10 @@ name: CI
 on:
   push:
     branches:
-      - main
-      - master
+      # the live branch *should* contain only commits the commits of each release (tag with a version)
+      - live
     tags:
-      - '*'
+      - 'v*'
   pull_request:
   workflow_dispatch:
 
