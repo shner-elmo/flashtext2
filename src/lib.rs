@@ -148,6 +148,5 @@ fn flashtext2(m: &Bound<'_, PyModule>) -> PyResult<()> {
     Ok(())
 }
 
-// TODO: create .pyi file
 // TODO: (flashtext-rs) fix lifetimes issues, take string by value instead of reference before cloning
 // TODO: benchmark `words: Vec<str>` Vs `words: PyIterator<str>` and see if there is a difference
