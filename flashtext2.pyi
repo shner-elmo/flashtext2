@@ -1,7 +1,3 @@
-"""
-.. include:: ../flashtext2-1.0.0.dist-info/METADATA
-"""
-
 from typing import Optional, Iterable
 
 
