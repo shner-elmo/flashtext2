@@ -19,7 +19,7 @@ N_TESTS = 5
 
 
 # TODO; use regular text with human selected keywords.
-def benchmark() -> Iterator[dict[str, ...]]:
+def benchmark() -> Iterator[dict]:
     for i in range(0, 100001, 1000):
         data = {'count': i}
         output = []
@@ -28,10 +28,6 @@ def benchmark() -> Iterator[dict[str, ...]]:
         sentence = ' '.join(words)  # len(story) == 10,000 * 6 = 60,000 chars
         keywords = random.sample(all_words, i)
 
-        # call this function to cache the regex compilation
-        kp = flashtext2.KeywordProcessor()
-        kp.add_keywords(['abcd'])
-        kp.extract_keywords('abcd abcd')
         # ------ tests --------------------------------------------------------------------------------------
 
         kp = flashtext.KeywordProcessor()
@@ -48,8 +44,8 @@ def benchmark() -> Iterator[dict[str, ...]]:
         output.append(out)
         del kp
 
-        kp2 = flashtext2.KeywordProcessor()
-        kp2.add_keywords(keywords)
+        kp2 = flashtext2.KeywordProcessor(case_sensitive=True)
+        kp2.add_keywords_from_iter(keywords)
 
         start = time.perf_counter()
         out = kp2.extract_keywords_with_span(sentence)
@@ -81,7 +77,7 @@ def main():
     data = itertools.chain(*(benchmark() for _ in range(N_TESTS)))
 
     df = pd.DataFrame(data=data)
-    df.to_csv(f'{name}.csv')
+    # df.to_csv(f'{name}.csv')
     avg_df = df.groupby('count').mean()  # this is necessary if N_TESTS > 1
     assert len(avg_df) == len(df) // N_TESTS
 
@@ -92,13 +88,13 @@ def main():
         'flashtext2': '#d62728',
     }
     plt = avg_df.plot.line(
-        title=f'Time For Extracting Keywords ({name})',
+        title=f'Time For Extracting Keywords',
         xlabel='Word Count',
         ylabel='Seconds',
         color=[name_color_map[col] for col in avg_df.columns],
         grid=True,
     )
-    plt.figure.savefig(f'extract-keywords-{name}.png')
+    plt.figure.savefig(f'extract-keywords{"-" + name if name else ""}.png')
 
 
 if __name__ == '__main__':
