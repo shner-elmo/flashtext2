@@ -14,7 +14,7 @@ pip install flashtext2
 # flashtext2
 
 `flashtext2` is an optimized version of the `flashtext` library for fast keyword extraction and replacement. 
-It offers orders of magnitude faster performance compared to traditional regular expressions.
+Its orders of magnitude faster compared to regular expressions.
 
 ## Key Enhancements in flashtext2
 
@@ -75,8 +75,6 @@ print(new_text)
 ```
 
 ### Case Sensitivity
-
-You can configure the `KeywordProcessor` to handle case sensitivity according to your needs.
 
 ```python
 from flashtext2 import KeywordProcessor
