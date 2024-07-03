@@ -99,6 +99,7 @@ impl PyKeywordProcessor {
     }
 
     // TODO: return an iterator
+    // test this: https://github.com/G-Research/ahocorasick_rs/blob/034e3f67e12198c08137bb9fb3153cb01cf5da31/src/lib.rs#L72-L87
     fn extract_keywords_with_span<'a>(&'a self, text: &'a str) -> Vec<(&str, usize, usize)> {
         duplicate_body!(&self.inner, inner, {
             if text.is_ascii() {
