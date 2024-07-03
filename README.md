@@ -144,4 +144,15 @@ The words have on average 6 characters, and a sentence has 10k words, so the len
 </details>
 
 
+### TODO
+
+<details>
+  <summary>
+  Click to unfold TODO
+  </summary>
+
+* Add multiple ways of normalizing strings: simple case folding, full case folding, and locale-aware folding
+* Remove all clones in src code
+</details>
+
 Credit to [Vikash Singh](https://github.com/vi3k6i5/), the author of the original `flashtext` package.
