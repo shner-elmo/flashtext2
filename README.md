@@ -130,9 +130,10 @@ print(kp.extract_keywords(text))
   Click to unfold performance
   </summary>
 
-Extracting keywords is usually 2.5-3x faster, and for replacing them its about 10x.  
+Extracting keywords is usually 2.5-3x faster, and replacing them is about 10x.  
 There is still room to optimize the code and improve performance.   
-You can find the benchmarks [here](https://github.com/shner-elmo/FlashText2.0/tree/master/benchmarks), 
+You can find the benchmarks [here](https://github.com/shner-elmo/FlashText2.0/tree/master/benchmarks).
+
 
 ![Image](benchmarks/extract-keywords.png)
 
