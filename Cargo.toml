@@ -18,10 +18,9 @@ name = "flashtext2"  # for now we are gonna implement that module in Rust
 crate-type = ["cdylib"]
 
 [dependencies]
-criterion = "0.5.1"
-flashtext2_rs = { package = "flashtext2", version = "0.1.0" }
+flashtext2_rs = { package = "flashtext2", version = "0.2.0" }
 
 [dependencies.pyo3]
-version = "0.19.2"
+version = "0.22.0"
 # "abi3-py38" tells pyo3 (and maturin) to build using the stable ABI with minimum Python version 3.8
 features = ["abi3-py38"]

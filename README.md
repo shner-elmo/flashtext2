@@ -1,210 +1,157 @@
-# flashtext 2.0
+<div align="center">
+    
+  <a href="https://pypi.org/project/flashtext2">![PyPi Version](https://badge.fury.io/py/flashtext2.svg)</a>
+  <a href="https://pypi.org/project/flashtext2">![Supported Python versions](https://img.shields.io/pypi/pyversions/flashtext2.svg?color=%2334D058)</a>
+  <a href="https://pepy.tech/project/flashtext2">![Downloads](https://static.pepy.tech/badge/flashtext2)</a>
+  <a href="https://pepy.tech/project/flashtext2">![Downloads](https://static.pepy.tech/badge/flashtext2/month)</a>
+    
+</div>
 
-### FlashText rewritten from scratch.
-
----
-
-[![PyPi](https://img.shields.io/badge/PyPi-1.0.0-yellow)](https://pypi.org/project/flashtext2/)
-[![Downloads](https://static.pepy.tech/badge/flashtext2)](https://pepy.tech/project/flashtext2)
-[![Downloads](https://static.pepy.tech/badge/flashtext2/month)](https://pepy.tech/project/flashtext2)
-
-You can get the package directly from [PyPI](https://pypi.org/project/flashtext2/)
-```
+```sh
 pip install flashtext2
 ```
 
-Current state of the project:
-I'm currently working on implementing the core in Rust, which will make the benchmarks 3 - 10x faster (Have a look at the `pyo3` branch).
----
+# flashtext2
+
+`flashtext2` is an optimized version of the `flashtext` library for fast keyword extraction and replacement. 
+Its orders of magnitude faster compared to regular expressions.
+
+## Key Enhancements in flashtext2
+
+- **Rewritten for Better Performance**: Completely rewritten in Rust, making it approximately 3-10x faster than the original version.
+- **Unicode Standard Annex #29**: Instead of relying on arbitrary regex patterns like **flashtext** 
+[does](https://github.com/vi3k6i5/flashtext/blob/b316c7e9e54b6b4d078462b302a83db85f884a94/flashtext/keyword.py#L13): `[A-Za-z0-9_]+`, 
+**flashtext2** uses the [Unicode Standard Annex #29](https://www.unicode.org/reports/tr29/) to split strings into tokens. 
+This ensures compatibility with all languages, not just Latin-based ones.
+- **Unicode Case Folding**: Instead of converting strings to lowercase for case-insensitive matches, it uses 
+[Unicode case folding](https://www.w3.org/TR/charmod-norm/#definitionCaseFolding), ensuring accurate normalization 
+of characters according to the Unicode standard.
+- **Fully Type-Hinted API**: The entire API is fully type-hinted, providing better code clarity and improved development experience.
 
 
-[`flashtext`](https://github.com/vi3k6i5/flashtext)
-is great, but wouldn't it be nice if the code was much simpler, so instead of 
-[this](https://github.com/vi3k6i5/flashtext/blob/5591859aabe3da37499a20d0d0d6dd77e480ed8d/flashtext/keyword.py#L470-L558):
-```py
-def extract_keywords(self, sentence, span_info=False):
-    keywords_extracted = []
-    if not sentence:
-        # if sentence is empty or none just return empty list
-        return keywords_extracted
-    if not self.case_sensitive:
-        sentence = sentence.lower()
-    current_dict = self.keyword_trie_dict
-    sequence_start_pos = 0
-    sequence_end_pos = 0
-    reset_current_dict = False
-    idx = 0
-    sentence_len = len(sentence)
-    while idx < sentence_len:
-        char = sentence[idx]
-        # when we reach a character that might denote word end
-        if char not in self.non_word_boundaries:
-
-            # if end is present in current_dict
-            if self._keyword in current_dict or char in current_dict:
-                # update longest sequence found
-                sequence_found = None
-                longest_sequence_found = None
-                is_longer_seq_found = False
-                if self._keyword in current_dict:
-                    sequence_found = current_dict[self._keyword]
-                    longest_sequence_found = current_dict[self._keyword]
-                    sequence_end_pos = idx
-                    
-    # and many more lines ... (89 lines in total)
-```
-We would have [this](https://github.com/shner-elmo/flashtext2/blob/master/flashtext2/keyword_processor.py#L55-L101):
-```py
-def _extract_keywords_iter(self, sentence: str) -> Iterator[str]:
-    if not self._case_sensitive:
-        sentence = sentence.lower()
-
-    words: list[str] = list(itertools.chain(self.split_sentence(sentence), ('',)))
-    n_words = len(words)
-    keyword = self.keyword
-    trie = self.trie_dict
-    node = trie
-
-    last_kw_found: str | None = None
-    n_words_covered = 0
-    idx = 0
-    while idx < n_words:
-        word = words[idx]
-
-        n_words_covered += 1
-        node = node.get(word)
-        if node:
-            kw = node.get(keyword)
-            if kw:
-                last_kw_found = kw
-        else:
-            if last_kw_found is not None:
-                yield last_kw_found
-                last_kw_found = None
-                idx -= 1
-            else:
-                idx -= n_words_covered - 1
-            node = trie
-            n_words_covered = 0
-        idx += 1
-```
-Much more readable, right?
-Not only is this more readable and concise, it is also more performant (and consistent), more about that later.
-
-Other than rewriting all the functions with simpler, shorter, and more intuitive code,
-all the methods and functions are fully typed.
-
-## Performance
-
-Simplicity is great, but how is the performance?
-
-I created some benchmarks which you could find [here](https://github.com/shner-elmo/FlashText2.0/tree/master/benchmarks), 
-and it turns out that both for extracting and replacing keywords it is faster than the original package:
-
-Extracting keywords:
-![Image](benchmarks/extract-keywords.png)
-
-Replacing keywords:
-![Image](benchmarks/replace-keywords.png)
+## Usage
 
 
----
-## Quick Start
-Import and initialize the class:
-```py
->>> from flashtext2 import KeywordProcessor
->>> kp = KeywordProcessor()
-```
+<details>
+  <summary>Click to unfold usage</summary>
 
-Add a bunch of words:
-```py
->>> kp.add_keywords_from_dict({'py': 'Python', 'go': 'Golang', 'hello': 'hey'})
-```
-The dictionary keys represent the words that we want to search in the string, 
-and the values are their corresponding 'clean word'.
+### Keyword Extraction
 
-Check how many words we added:
-```py
->>> len(kp)
-3
-```
-
-We can see how the key/values are stored in the trie dict:
 ```python
->>> kp.trie_dict
-{'py': {'__keyword__': 'Python'},
- 'go': {'__keyword__': 'Golang'},
- 'hello': {'__keyword__': 'hey'}}
-```
-
-One major change in FlashText 2.0 is that the keywords are separated by words and non-words groups instead of characters.
-For example, if you were to add the keyword/sentence `"I love .NET"` it would be stored like this:
-```py
-kp2 = KeywordProcessor()
-kp2.add_keyword("I love .NET")  # not actually :)
->>> kp2.trie_dict
-```
-```
-{'i': {' ': {'love': {' ': {'': {'.': {'net': {'__keyword__': 'I love .NET'}}}}}}}}
-```
-
-
-### Extracting Keywords
-
-```py
 from flashtext2 import KeywordProcessor
-kp = KeywordProcessor()
-kp.add_keywords_from_dict({'py': 'Python', 'go': 'Golang', 'hello': 'Hey'})
 
-my_str = 'Hello, I love learning Py, aka: Python, and I plan to learn about Go as well.'
+kp = KeywordProcessor(case_sensitive=False)
 
-kp.extract_keywords(my_str)
+kp.add_keyword('Python')
+kp.add_keyword('flashtext')
+kp.add_keyword('program')
+
+text = "I love programming in Python and using the flashtext library."
+
+keywords_found = kp.extract_keywords(text)
+print(keywords_found)
+# Output: ['Python', 'flashtext']
+
+keywords_found = kp.extract_keywords_with_span(text)
+print(keywords_found)
+# Output: [('Python', 22, 28), ('flashtext', 43, 52)]
 ```
-```
-['Hey', 'Python', 'Golang']
+
+### Keyword Replacement
+
+```python
+from flashtext2 import KeywordProcessor
+
+kp = KeywordProcessor(case_sensitive=False)
+
+kp.add_keyword('Java', 'Python')
+kp.add_keyword('regex', 'flashtext')
+
+text = "I love programming in Java and using the regex library."
+new_text = kp.replace_keywords(text)
+
+print(new_text)
+# Output: "I love programming in Python and using the flashtext library."
 ```
 
-### Extracting Keywords but with Span
+### Case Sensitivity
 
-```py
+```python
+from flashtext2 import KeywordProcessor
+
+text = 'abc aBc ABC'
+
+kp = KeywordProcessor(case_sensitive=True)
+kp.add_keyword('aBc')
+
+print(kp.extract_keywords(text))
+# Output: ['aBc']
+
+kp = KeywordProcessor(case_sensitive=False)
+kp.add_keyword('aBc')
+
+print(kp.extract_keywords(text))
+# Output: ['aBc', 'aBc', 'aBc']
+```
+
+### Other Examples
+
+Overlapping keywords (returns the longest sequence)
+```python
 from flashtext2 import KeywordProcessor
 
 kp = KeywordProcessor(case_sensitive=True)
-text = "The Teloschistaceae are a large family of mostly lichen-forming fungi belonging to the class Lecanoromycetes in the division Ascomycota."
-kp.add_keyword("Teloschistaceae", "**Teloschistaceae**")
-kp.add_keyword("Lecanoromycetes")
-ekw_list = kp.extract_keywords_with_span(text)
-print(ekw_list) 
-```
-```
-[('**Teloschistaceae**', 4, 19), ('Lecanoromycetes', 93, 108)]
+kp.add_keyword('machine')
+kp.add_keyword('machine learning')
+
+text = "machine learning is a subset of artificial intelligence"
+print(kp.extract_keywords(text))
+# Output: ['machine learning']
 ```
 
+Case folding
+```python
+from flashtext2 import KeywordProcessor
 
-### Replace Keywords
+kp = KeywordProcessor(case_sensitive=False)
+kp.add_keywords_from_iter(["flour", "Maße", "ᾲ στο διάολο"])
 
-
-```py
-kp.replace_keywords(my_str)
+text = "ﬂour, MASSE, ὰι στο διάολο"
+print(kp.extract_keywords(text))
+# Output: ['flour', 'Maße', 'ᾲ στο διάολο']
 ```
-```
-'Hey, I love learning Python, aka: Python, and I plan to learn about Golang as well.'
-```
+</details>
 
 
-### Acknowledgements
-Credit goes to the original FlashText package author; [Vikash Singh](https://github.com/vi3k6i5/),
-and to [decorator-factory](https://github.com/decorator-factory) for optimizing the algorithm.
+### Performance
+
+<details>
+  <summary>
+  Click to unfold performance
+  </summary>
+
+Extracting keywords is usually 2.5-3x faster, and replacing them is about 10x.  
+There is still room to optimize the code and improve performance.   
+You can find the benchmarks [here](https://github.com/shner-elmo/FlashText2.0/tree/master/benchmarks).
 
 
-#### What's next
+![Image](benchmarks/extract-keywords.png)
 
-Stay tuned! In the future version I will implement the whole algorithm in Rust, which other than being as fast as C,
-it consumes very little memory usage even on very large strings, and it makes it easy to parallelize code to take 
-advantage of all cores.
+![Image](benchmarks/replace-keywords.png)
 
-* Optimize the extract_keywords() algorithm
-* Experiment with Cython to speed up everything
-* Add a selection algorithms for extracting different things (words, substrings, sentences, etc.) 
-* Improve tests
-* Experiment with `multiprocessing` to improve performance on very large strings
+The words have on average 6 characters, and a sentence has 10k words, so the length is 60k.
+</details>
+
+
+### TODO
+
+<details>
+  <summary>
+  Click to unfold TODO
+  </summary>
+
+* Add multiple ways of normalizing strings: simple case folding, full case folding, and locale-aware folding
+* Remove all clones in src code
+</details>
+
+Credit to [Vikash Singh](https://github.com/vi3k6i5/), the author of the original `flashtext` package.
